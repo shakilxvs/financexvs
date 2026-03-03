@@ -182,7 +182,7 @@ export default function App() {
       <div style={{ background: "linear-gradient(90deg,#0d2137,#0a1628)", borderBottom: "1px solid #1e3a5f", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 4px 24px rgba(0,229,160,0.08)", gap: 12, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#00e5a0", letterSpacing: "-0.5px" }}>💼 FreelanceFlow</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#00e5a0", letterSpacing: "-0.5px" }}>💸 Finance Flow</div>
             <div style={{ fontSize: 10, color: "#4a7fa5" }}>Personal finance manager</div>
           </div>
           <CurrencyDropdown currency={currency} setCurrency={setCurrency} rate={usdRate} rateLoading={rateLoading} />
@@ -218,8 +218,8 @@ export default function App() {
 function Splash({ text }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0d1117", gap: 16 }}>
-      <div style={{ fontSize: 40 }}>💼</div>
-      <div style={{ color: "#00e5a0", fontWeight: 800, fontSize: 20 }}>FreelanceFlow</div>
+      <div style={{ fontSize: 40 }}>🪙</div>
+      <div style={{ color: "#00e5a0", fontWeight: 800, fontSize: 20 }}>Finance Flow</div>
       <div style={{ color: "#4a7fa5", fontSize: 13 }}>{text}</div>
     </div>
   );
@@ -230,7 +230,7 @@ function LoginScreen({ onLogin }) {
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "linear-gradient(135deg,#0d1117 0%,#0f1923 100%)", fontFamily: "'Segoe UI',system-ui,sans-serif", padding: 20 }}>
       <div style={{ textAlign: "center", maxWidth: 380, width: "100%" }}>
         <div style={{ fontSize: 56, marginBottom: 12 }}>💼</div>
-        <div style={{ fontSize: 32, fontWeight: 900, color: "#00e5a0", letterSpacing: "-1px", marginBottom: 8 }}>FreelanceFlow</div>
+        <div style={{ fontSize: 32, fontWeight: 900, color: "#00e5a0", letterSpacing: "-1px", marginBottom: 8 }}>Finance Flow</div>
         <div style={{ fontSize: 15, color: "#4a7fa5", marginBottom: 40, lineHeight: 1.6 }}>Your personal finance manager.<br />Track income, pending payments & expenses.</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 40 }}>
           {["💚 Track Income", "⏳ Pending Payments", "🔴 Daily Expenses", "☁️ Cloud Sync", "📊 Monthly Reports", "🔒 Private & Secure"].map(f => (
