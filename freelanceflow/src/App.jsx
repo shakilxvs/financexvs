@@ -229,7 +229,7 @@ function LoginScreen({ onLogin }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "linear-gradient(135deg,#0d1117 0%,#0f1923 100%)", fontFamily: "'Segoe UI',system-ui,sans-serif", padding: 20 }}>
       <div style={{ textAlign: "center", maxWidth: 380, width: "100%" }}>
-        <div style={{ fontSize: 56, marginBottom: 12 }}>💼</div>
+        <div style={{ fontSize: 56, marginBottom: 12 }}>💸</div>
         <div style={{ fontSize: 32, fontWeight: 900, color: "#00e5a0", letterSpacing: "-1px", marginBottom: 8 }}>Finance Flow</div>
         <div style={{ fontSize: 15, color: "#4a7fa5", marginBottom: 40, lineHeight: 1.6 }}>Your personal finance manager.<br />Track income, pending payments & expenses.</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 40 }}>
