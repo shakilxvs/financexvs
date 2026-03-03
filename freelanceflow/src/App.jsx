@@ -299,7 +299,7 @@ export default function App() {
       </div>
 
       {/* ── Floating Tabs ── */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "14px 16px 4px", gap: 4, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", padding: "10px 16px", gap: 6, overflowX: "auto", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", background: "rgba(255,255,255,0.04)", borderRadius: 14, margin: "10px 16px 0", backdropFilter: "blur(8px)" }}>
         {tabs.map(tb => (
           <button key={tb.id} onClick={() => setTab(tb.id)} style={{
             background: tab === tb.id ? "rgba(0,229,160,0.15)" : "transparent",
