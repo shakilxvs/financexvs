@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import {
   signInWithPopup, signOut, onAuthStateChanged,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  updateProfile, sendEmailVerification
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, provider, db } from "./firebase";
@@ -139,27 +140,7 @@ async function saveToCloud(uid, finance, settings, profile) {
   catch(e) { console.error("Save error:", e); }
 }
 
-// ── Sync Toast ────────────────────────────────────────────────
-const SPIN_STYLE = `@keyframes ffSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`;
-function SyncToast({ show }) {
-  return (
-    <>
-      <style>{SPIN_STYLE}</style>
-      <div style={{
-        position:"fixed", top:20, left:"50%", transform:"translateX(-50%)",
-        background:"rgba(0,229,160,0.12)", border:"1px solid rgba(0,229,160,0.3)",
-        backdropFilter:"blur(10px)", WebkitBackdropFilter:"blur(10px)",
-        borderRadius:99, padding:"8px 18px", fontSize:12, color:"#00e5a0",
-        fontWeight:700, zIndex:99999, display:"flex", alignItems:"center", gap:7,
-        opacity:show?1:0, transition:"opacity 0.3s", pointerEvents:"none",
-        boxShadow:"0 4px 20px rgba(0,229,160,0.15)", whiteSpace:"nowrap",
-      }}>
-        <span style={{ display:"inline-block", animation:"ffSpin 1s linear infinite", fontSize:14 }}>⟳</span>
-        Syncing to cloud…
-      </div>
-    </>
-  );
-}
+
 
 // ── User Avatar ───────────────────────────────────────────────
 function UserAvatar({ photoURL, size=30, t }) {
@@ -214,7 +195,7 @@ function ThreeDotMenu({ options, t }) {
 }
 
 // ── Hamburger Menu ────────────────────────────────────────────
-function HamburgerMenu({ onLogout, onProfile, onSettings, theme, setTheme, t }) {
+function HamburgerMenu({ onLogout, onProfile, onSettings, t }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -236,10 +217,6 @@ function HamburgerMenu({ onLogout, onProfile, onSettings, theme, setTheme, t }) 
         <div style={{ position:"absolute", right:0, top:"calc(100% + 8px)", background:t.menuBg, border:`1px solid ${t.cardBorder}`, borderRadius:18, zIndex:9999, minWidth:200, boxShadow:"0 12px 40px rgba(0,0,0,0.3)", overflow:"hidden" }}>
           {item(<Ico name="circleUser" size={15} color={t.subText}/>, "Profile", onProfile)}
           {item(<Ico name="gear" size={15} color={t.subText}/>, "Settings", onSettings)}
-          <button onClick={() => { setTheme(th => th==="dark"?"light":"dark"); setOpen(false); }} style={{ display:"flex", alignItems:"center", gap:12, width:"100%", padding:"12px 18px", background:"transparent", border:"none", color:t.text, cursor:"pointer", fontSize:14, fontWeight:500, borderBottom:`1px solid ${t.cardBorder}`, textAlign:"left" }}>
-            <span style={{ fontSize:16 }}>{theme==="dark"?"☀️":"🌙"}</span>
-            {theme==="dark"?"Light Mode":"Dark Mode"}
-          </button>
           <a href="https://shakilxvs.wordpress.com/" target="_blank" rel="noreferrer" onClick={() => setOpen(false)} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 18px", color:t.text, textDecoration:"none", fontSize:14, fontWeight:500, borderBottom:`1px solid ${t.cardBorder}` }}>
             <Ico name="at" size={15} color={t.subText}/> Support
           </a>
@@ -447,7 +424,6 @@ export default function App() {
 
   return (
     <div style={{ minHeight:"100vh", background:t.pageBg, fontFamily:"'Segoe UI',system-ui,sans-serif", color:t.text, transition:"background 0.3s" }}>
-      <SyncToast show={syncing} />
       {confirm && <ConfirmPopup message={confirm.message} onConfirm={confirm.onConfirm} onCancel={()=>setConfirm(null)} t={t} />}
 
       {/* Profile / Settings overlays */}
@@ -466,7 +442,7 @@ export default function App() {
                   <span style={{ fontSize:16, fontWeight:800, color:"#00e5a0", letterSpacing:"-0.5px" }}>Finance Flow</span>
                   <CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading} />
                 </div>
-                <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} theme={theme} setTheme={v=>setSetting("theme",v)} t={t} />
+                <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} t={t} />
               </div>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                 <div style={{ background:"rgba(0,229,160,0.1)", border:"1px solid rgba(0,229,160,0.3)", borderRadius:10, padding:"5px 11px", fontSize:12, fontWeight:700, color:"#00e5a0" }}>
@@ -495,7 +471,7 @@ export default function App() {
                 </div>
                 <UserAvatar photoURL={user.photoURL} size={30} t={t} />
                 <span style={{ fontSize:12, color:t.dimText, maxWidth:72, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{fname}</span>
-                <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} theme={theme} setTheme={v=>setSetting("theme",v)} t={t} />
+                <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} t={t} />
               </div>
             </div>
           )}
@@ -553,8 +529,14 @@ function LoginScreen({ onGoogleLogin }) {
       if (mode === "signup") {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         if (name.trim()) await updateProfile(cred.user, { displayName: name.trim() });
+        await sendEmailVerification(cred.user);
+        setMode("verify");
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        if (!cred.user.emailVerified && cred.user.providerData[0]?.providerId === "password") {
+          setMode("verify");
+          await signOut(auth);
+        }
       }
     } catch(e) { setError(errMap[e.code] || "Something went wrong. Please try again."); }
     finally { setLoading(false); }
@@ -574,16 +556,29 @@ function LoginScreen({ onGoogleLogin }) {
           ))}
         </div>
         <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid #1e3a5f", borderRadius:20, padding:"26px 22px" }}>
-          {/* Mode toggle */}
-          <div style={{ display:"flex", background:"rgba(255,255,255,0.05)", borderRadius:12, padding:4, marginBottom:20 }}>
+          {mode !== "verify" && <div style={{ display:"flex", background:"rgba(255,255,255,0.05)", borderRadius:12, padding:4, marginBottom:20 }}>
             {["signin","signup"].map(m=>(
               <button key={m} onClick={()=>{ setMode(m); setError(""); }} style={{ flex:1, padding:"9px", background:mode===m?"rgba(0,229,160,0.18)":"transparent", border:mode===m?"1px solid rgba(0,229,160,0.4)":"1px solid transparent", borderRadius:10, color:mode===m?"#00e5a0":"#4a7fa5", cursor:"pointer", fontSize:13, fontWeight:mode===m?700:400, transition:"all 0.2s" }}>
                 {m==="signin"?"Sign In":"Create Account"}
               </button>
             ))}
-          </div>
-          {/* Fields */}
-          {mode==="signup" && (
+          </div>}
+          {mode === "verify" && (
+            <div style={{ textAlign:"center", padding:"8px 0 20px" }}>
+              <div style={{ fontSize:48, marginBottom:14 }}>📧</div>
+              <div style={{ fontSize:17, fontWeight:800, color:"#00e5a0", marginBottom:10 }}>Check your inbox!</div>
+              <div style={{ fontSize:13, color:"#4a7fa5", lineHeight:1.8, marginBottom:24 }}>
+                A verification link was sent to<br/>
+                <strong style={{ color:"#e6edf3" }}>{email}</strong>.<br/>
+                Click the link, then come back to sign in.
+              </div>
+              <button onClick={()=>{ setMode("signin"); setError(""); }} style={{ width:"100%", padding:"13px", background:"rgba(0,229,160,0.18)", border:"1px solid rgba(0,229,160,0.5)", borderRadius:12, color:"#00e5a0", cursor:"pointer", fontSize:14, fontWeight:700, marginBottom:12 }}>
+                ✅ I verified — Sign In
+              </button>
+              <div style={{ fontSize:11, color:"#4a7fa5" }}>Didn't get it? Check spam, or try creating your account again.</div>
+            </div>
+          )}
+          {mode !== "verify" && mode==="signup" && (
             <div style={{ marginBottom:12, textAlign:"left" }}>
               <div style={{ fontSize:10, color:"#4a7fa5", marginBottom:5, textTransform:"uppercase", letterSpacing:1 }}>Full Name</div>
               <input value={name} onChange={e=>{setName(e.target.value);setError("");}} placeholder="e.g. Shakil Ahmed" style={inp} />
@@ -784,7 +779,7 @@ function SettingsPage({ settings, setSetting, t, onClose }) {
         {/* About */}
         <div style={{ background:t.sectionBg, border:`1px solid ${t.sectionBorder}`, borderRadius:20, padding:24 }}>
           <div style={{ fontSize:15, fontWeight:700, marginBottom:14 }}>ℹ️ About</div>
-          {[["App","Finance Flow"],["Version","2.0"],["Support","shakilxvs.wordpress.com"],["Data Storage","Firebase Cloud"]].map(([k,v])=>(
+          {[["App","Finance Flow"],["Version","2.0"],["Developer","@shakilxvs"],["Support","shakilxvs.wordpress.com"],["Data Storage","Firebase Cloud"]].map(([k,v])=>(
             <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"10px 0", borderBottom:`1px solid ${t.cardBorder}`, fontSize:13 }}>
               <span style={{ color:t.subText }}>{k}</span>
               <span style={{ color:t.text, fontWeight:600 }}>{v}</span>
