@@ -1,17 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, provider, db } from "./firebase";
 
-// ─── Constants ───────────────────────────────────────────────
 const defaultData = { income: [], pending: [], expenses: [] };
 const EXPENSE_CATS = ["Food", "Transport", "Software", "Office", "Utilities", "Entertainment", "Other"];
 const INCOME_CATS  = ["Project", "Salary", "Bonus", "Retainer", "Other"];
 
-function formatBDT(n)  { return "৳ " + Number(n).toLocaleString("en-BD"); }
-function today()       { return new Date().toISOString().split("T")[0]; }
+function today() { return new Date().toISOString().split("T")[0]; }
 
-// ─── Firestore helpers ────────────────────────────────────────
+function fmt(n, currency, rate) {
+  const num = Number(n) || 0;
+  if (currency === "USD") {
+    return "$ " + (num / rate).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  return "৳ " + num.toLocaleString("en-BD");
+}
+
 async function loadFromCloud(uid) {
   try {
     const snap = await getDoc(doc(db, "users", uid));
@@ -23,6 +28,68 @@ async function saveToCloud(uid, data) {
   catch (e) { console.error("Save error:", e); }
 }
 
+// ─── Currency Dropdown ────────────────────────────────────────
+function CurrencyDropdown({ currency, setCurrency, rate, rateLoading }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button onClick={() => setOpen(!open)} style={{
+        display: "flex", alignItems: "center", gap: 6,
+        background: "rgba(0,229,160,0.08)", border: "1px solid rgba(0,229,160,0.3)",
+        borderRadius: 8, padding: "5px 10px", cursor: "pointer",
+        color: "#00e5a0", fontSize: 12, fontWeight: 700,
+      }}>
+        <span style={{ fontSize: 15 }}>{currency === "BDT" ? "🇧🇩" : "🇺🇸"}</span>
+        <span>{currency}</span>
+        <span style={{ fontSize: 9, opacity: 0.6 }}>{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 8px)", left: 0,
+          background: "#0d2137", border: "1px solid #1e3a5f",
+          borderRadius: 12, zIndex: 999, minWidth: 190,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)", overflow: "hidden"
+        }}>
+          <div style={{ padding: "8px 14px", borderBottom: "1px solid #1e3a5f", fontSize: 10, color: "#4a7fa5" }}>
+            {rateLoading
+              ? "⏳ Fetching live rate..."
+              : `🔴 Live  ·  1 USD = ৳ ${rate.toFixed(2)}`}
+          </div>
+          {[
+            { code: "BDT", flag: "🇧🇩", label: "Bangladeshi Taka" },
+            { code: "USD", flag: "🇺🇸", label: "US Dollar" },
+          ].map(c => (
+            <button key={c.code} onClick={() => { setCurrency(c.code); setOpen(false); }} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              width: "100%", padding: "11px 14px",
+              background: currency === c.code ? "rgba(0,229,160,0.1)" : "transparent",
+              border: "none", cursor: "pointer",
+              color: currency === c.code ? "#00e5a0" : "#e6edf3",
+              fontSize: 13, fontWeight: currency === c.code ? 700 : 400,
+            }}>
+              <span style={{ fontSize: 20 }}>{c.flag}</span>
+              <div style={{ textAlign: "left" }}>
+                <div>{c.code}</div>
+                <div style={{ fontSize: 10, color: "#4a7fa5" }}>{c.label}</div>
+              </div>
+              {currency === c.code && <span style={{ marginLeft: "auto", color: "#00e5a0" }}>✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── ROOT APP ────────────────────────────────────────────────
 export default function App() {
   const [user,        setUser]        = useState(null);
@@ -30,6 +97,25 @@ export default function App() {
   const [tab,         setTab]         = useState("dashboard");
   const [syncing,     setSyncing]     = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [currency,    setCurrency]    = useState("BDT");
+  const [usdRate,     setUsdRate]     = useState(122);
+  const [rateLoading, setRateLoading] = useState(true);
+
+  // ── Live rate fetch ──────────────────────────────────────────
+  useEffect(() => {
+    async function fetchRate() {
+      try {
+        setRateLoading(true);
+        const res  = await fetch("https://open.er-api.com/v6/latest/USD");
+        const json = await res.json();
+        if (json?.rates?.BDT) setUsdRate(json.rates.BDT);
+      } catch { /* keep fallback 122 */ }
+      finally { setRateLoading(false); }
+    }
+    fetchRate();
+    const interval = setInterval(fetchRate, 30 * 60 * 1000); // refresh every 30 min
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -53,6 +139,8 @@ export default function App() {
 
   const login  = () => signInWithPopup(auth, provider);
   const logout = () => { signOut(auth); setData(defaultData); setTab("dashboard"); };
+
+  const f = (n) => fmt(n, currency, usdRate);
 
   const addIncome     = (item) => setData(d => ({ ...d, income:   [item, ...d.income] }));
   const addPending    = (item) => setData(d => ({ ...d, pending:  [item, ...d.pending] }));
@@ -92,16 +180,17 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#0d1117 0%,#0f1923 100%)", fontFamily: "'Segoe UI',system-ui,sans-serif", color: "#e6edf3" }}>
       {/* Header */}
       <div style={{ background: "linear-gradient(90deg,#0d2137,#0a1628)", borderBottom: "1px solid #1e3a5f", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 4px 24px rgba(0,229,160,0.08)", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 800, color: "#00e5a0", letterSpacing: "-0.5px" }}>💼 FreelanceFlow</div>
             <div style={{ fontSize: 10, color: "#4a7fa5" }}>Personal finance manager</div>
           </div>
+          <CurrencyDropdown currency={currency} setCurrency={setCurrency} rate={usdRate} rateLoading={rateLoading} />
           {syncing && <div style={{ fontSize: 11, color: "#4a7fa5", background: "rgba(74,127,165,0.1)", border: "1px solid #1e3a5f", borderRadius: 99, padding: "3px 10px" }}>☁️ Syncing…</div>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ background: "rgba(0,229,160,0.1)", border: "1px solid rgba(0,229,160,0.3)", borderRadius: 8, padding: "5px 12px", fontSize: 13, color: "#00e5a0" }}>
-            Net: {formatBDT(netBalance)}
+            Net: {f(netBalance)}
           </div>
           <img src={user.photoURL} alt="" style={{ width: 30, height: 30, borderRadius: "50%", border: "2px solid #00e5a040" }} />
           <span style={{ fontSize: 12, color: "#6b8fa8", maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.displayName?.split(" ")[0]}</span>
@@ -117,16 +206,15 @@ export default function App() {
       </div>
 
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px" }}>
-        {tab === "dashboard" && <Dashboard totalIncome={totalIncome} totalPending={totalPending} totalExpenses={totalExpenses} netBalance={netBalance} monthIncome={monthIncome} monthExpenses={monthExpenses} data={data} userName={user.displayName?.split(" ")[0]} />}
-        {tab === "income"    && <IncomeTab   data={data.income}   onAdd={addIncome}   onDelete={id => deleteItem("income", id)} />}
-        {tab === "pending"   && <PendingTab  data={data.pending}  onAdd={addPending}  onMarkPaid={markPaid} onDelete={id => deleteItem("pending", id)} onUpdate={updatePending} />}
-        {tab === "expenses"  && <ExpensesTab data={data.expenses} onAdd={addExpense}  onDelete={id => deleteItem("expenses", id)} />}
+        {tab === "dashboard" && <Dashboard totalIncome={totalIncome} totalPending={totalPending} totalExpenses={totalExpenses} netBalance={netBalance} monthIncome={monthIncome} monthExpenses={monthExpenses} data={data} userName={user.displayName?.split(" ")[0]} f={f} />}
+        {tab === "income"    && <IncomeTab   data={data.income}   onAdd={addIncome}   onDelete={id => deleteItem("income", id)}   f={f} />}
+        {tab === "pending"   && <PendingTab  data={data.pending}  onAdd={addPending}  onMarkPaid={markPaid} onDelete={id => deleteItem("pending", id)} onUpdate={updatePending} f={f} />}
+        {tab === "expenses"  && <ExpensesTab data={data.expenses} onAdd={addExpense}  onDelete={id => deleteItem("expenses", id)} f={f} />}
       </div>
     </div>
   );
 }
 
-// ─── SPLASH ──────────────────────────────────────────────────
 function Splash({ text }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0d1117", gap: 16 }}>
@@ -137,7 +225,6 @@ function Splash({ text }) {
   );
 }
 
-// ─── LOGIN SCREEN ────────────────────────────────────────────
 function LoginScreen({ onLogin }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "linear-gradient(135deg,#0d1117 0%,#0f1923 100%)", fontFamily: "'Segoe UI',system-ui,sans-serif", padding: 20 }}>
@@ -166,8 +253,7 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-// ─── DASHBOARD ───────────────────────────────────────────────
-function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, data, userName }) {
+function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, data, userName, f }) {
   const cards = [
     { label: "Total Income",    value: totalIncome,   color: "#00e5a0", bg: "rgba(0,229,160,0.08)",   icon: "💚" },
     { label: "Pending Payment", value: totalPending,  color: "#f0a500", bg: "rgba(240,165,0,0.08)",   icon: "⏳" },
@@ -183,7 +269,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
           <div key={c.label} style={{ background: c.bg, border: `1px solid ${c.color}30`, borderRadius: 14, padding: "18px 16px" }}>
             <div style={{ fontSize: 22 }}>{c.icon}</div>
             <div style={{ fontSize: 10, color: "#4a7fa5", marginTop: 8, textTransform: "uppercase", letterSpacing: 1 }}>{c.label}</div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: c.color, marginTop: 4 }}>{formatBDT(c.value)}</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: c.color, marginTop: 4 }}>{f(c.value)}</div>
           </div>
         ))}
       </div>
@@ -191,7 +277,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>📅 This Month</div>
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {[["EARNED", monthIncome, "#00e5a0"], ["SPENT", monthExpenses, "#ff5c5c"], ["SAVED", monthIncome - monthExpenses, monthIncome - monthExpenses >= 0 ? "#00e5a0" : "#ff5c5c"]].map(([l, v, c]) => (
-            <div key={l}><div style={{ fontSize: 11, color: "#4a7fa5" }}>{l}</div><div style={{ fontSize: 20, fontWeight: 800, color: c }}>{formatBDT(v)}</div></div>
+            <div key={l}><div style={{ fontSize: 11, color: "#4a7fa5" }}>{l}</div><div style={{ fontSize: 20, fontWeight: 800, color: c }}>{f(v)}</div></div>
           ))}
         </div>
         {monthIncome > 0 && (<div style={{ marginTop: 16 }}><div style={{ background: "#1e3a5f", borderRadius: 99, height: 8, overflow: "hidden" }}><div style={{ width: Math.min(100, (monthExpenses / monthIncome) * 100) + "%", background: monthExpenses / monthIncome > 0.8 ? "#ff5c5c" : "#00e5a0", height: "100%", borderRadius: 99, transition: "width 0.5s" }} /></div><div style={{ fontSize: 11, color: "#4a7fa5", marginTop: 4 }}>{Math.round((monthExpenses / monthIncome) * 100)}% of income spent</div></div>)}
@@ -202,7 +288,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         {recentTx.map(tx => (
           <div key={tx.id + tx.type} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #1a2f47" }}>
             <div><div style={{ fontSize: 13, fontWeight: 600 }}>{tx.type === "income" ? "💚" : tx.type === "pending" ? "⏳" : "🔴"} {tx.client || tx.category || "—"}</div><div style={{ fontSize: 11, color: "#4a7fa5" }}>{tx.date}</div></div>
-            <div style={{ fontWeight: 800, fontSize: 14, color: tx.type === "income" ? "#00e5a0" : tx.type === "pending" ? "#f0a500" : "#ff5c5c" }}>{tx.type === "expense" ? "−" : "+"}{formatBDT(tx.amount)}</div>
+            <div style={{ fontWeight: 800, fontSize: 14, color: tx.type === "income" ? "#00e5a0" : tx.type === "pending" ? "#f0a500" : "#ff5c5c" }}>{tx.type === "expense" ? "−" : "+"}{f(tx.amount)}</div>
           </div>
         ))}
       </div>
@@ -210,8 +296,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
   );
 }
 
-// ─── INCOME TAB ───────────────────────────────────────────────
-function IncomeTab({ data, onAdd, onDelete }) {
+function IncomeTab({ data, onAdd, onDelete, f }) {
   const [form, setForm] = useState({ client: "", amount: "", date: today(), category: "Project", note: "" });
   const [show, setShow] = useState(false);
   const submit = () => { if (!form.client || !form.amount) return; onAdd({ ...form, id: Date.now() }); setForm({ client: "", amount: "", date: today(), category: "Project", note: "" }); setShow(false); };
@@ -223,22 +308,21 @@ function IncomeTab({ data, onAdd, onDelete }) {
       </div>
       {show && (<FormCard color="#00e5a0">
         <FormRow label="Client / Source"><input style={inputStyle} value={form.client} onChange={e => setForm(f => ({ ...f, client: e.target.value }))} placeholder="e.g. Fiverr Client" /></FormRow>
-        <FormRow label="Amount (৳)"><input style={inputStyle} type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="5000" /></FormRow>
+        <FormRow label="Amount (৳ BDT)"><input style={inputStyle} type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="5000" /></FormRow>
         <FormRow label="Date"><input style={inputStyle} type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} /></FormRow>
         <FormRow label="Category"><select style={inputStyle} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>{INCOME_CATS.map(c => <option key={c}>{c}</option>)}</select></FormRow>
         <FormRow label="Note (optional)"><input style={inputStyle} value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="e.g. Logo design project" /></FormRow>
         <div style={{ display: "flex", gap: 10, marginTop: 16 }}><button onClick={submit} style={btnStyle("#00e5a0")}>✅ Save</button><button onClick={() => setShow(false)} style={btnStyle("#4a7fa5")}>Cancel</button></div>
       </FormCard>)}
-      <TxList items={data} onDelete={onDelete} color="#00e5a0" labelKey="client" />
+      <TxList items={data} onDelete={onDelete} color="#00e5a0" labelKey="client" f={f} />
     </div>
   );
 }
 
-// ─── PENDING TAB ─────────────────────────────────────────────
-function PendingTab({ data, onAdd, onMarkPaid, onDelete, onUpdate }) {
-  const [form, setForm]           = useState({ client: "", amount: "", date: today(), dueDate: "", note: "" });
-  const [show, setShow]           = useState(false);
-  const [editId, setEditId]       = useState(null);
+function PendingTab({ data, onAdd, onMarkPaid, onDelete, onUpdate, f }) {
+  const [form, setForm]             = useState({ client: "", amount: "", date: today(), dueDate: "", note: "" });
+  const [show, setShow]             = useState(false);
+  const [editId, setEditId]         = useState(null);
   const [editAmount, setEditAmount] = useState("");
   const submit   = () => { if (!form.client || !form.amount) return; onAdd({ ...form, id: Date.now() }); setForm({ client: "", amount: "", date: today(), dueDate: "", note: "" }); setShow(false); };
   const saveEdit = (id) => { if (!editAmount) return; onUpdate(id, { amount: editAmount }); setEditId(null); setEditAmount(""); };
@@ -249,10 +333,10 @@ function PendingTab({ data, onAdd, onMarkPaid, onDelete, onUpdate }) {
         <div style={{ fontSize: 22, fontWeight: 800 }}>⏳ Pending</div>
         <button onClick={() => setShow(!show)} style={btnStyle("#f0a500")}>+ Add Pending</button>
       </div>
-      <div style={{ fontSize: 13, color: "#f0a500", marginBottom: 20 }}>Total Awaiting: {formatBDT(total)}</div>
+      <div style={{ fontSize: 13, color: "#f0a500", marginBottom: 20 }}>Total Awaiting: {f(total)}</div>
       {show && (<FormCard color="#f0a500">
         <FormRow label="Client Name"><input style={inputStyle} value={form.client} onChange={e => setForm(f => ({ ...f, client: e.target.value }))} placeholder="e.g. XYZ Company" /></FormRow>
-        <FormRow label="Amount (৳)"><input style={inputStyle} type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="10000" /></FormRow>
+        <FormRow label="Amount (৳ BDT)"><input style={inputStyle} type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="10000" /></FormRow>
         <FormRow label="Invoice Date"><input style={inputStyle} type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} /></FormRow>
         <FormRow label="Due Date"><input style={inputStyle} type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} /></FormRow>
         <FormRow label="Note"><input style={inputStyle} value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="e.g. Website project final payment" /></FormRow>
@@ -279,7 +363,7 @@ function PendingTab({ data, onAdd, onMarkPaid, onDelete, onUpdate }) {
                   </div>
                 ) : (
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: "#f0a500" }}>{formatBDT(item.amount)}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: "#f0a500" }}>{f(item.amount)}</div>
                     <button onClick={() => { setEditId(item.id); setEditAmount(item.amount); }} style={{ background: "rgba(240,165,0,0.12)", border: "1px solid #f0a50050", color: "#f0a500", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 13 }}>✏️</button>
                   </div>
                 )}
@@ -296,8 +380,7 @@ function PendingTab({ data, onAdd, onMarkPaid, onDelete, onUpdate }) {
   );
 }
 
-// ─── EXPENSES TAB ─────────────────────────────────────────────
-function ExpensesTab({ data, onAdd, onDelete }) {
+function ExpensesTab({ data, onAdd, onDelete, f }) {
   const [form, setForm]               = useState({ category: "Food", amount: "", date: today(), note: "" });
   const [show, setShow]               = useState(false);
   const [catFilter, setCatFilter]     = useState("All");
@@ -315,7 +398,7 @@ function ExpensesTab({ data, onAdd, onDelete }) {
       </div>
       {show && (<FormCard color="#ff5c5c">
         <FormRow label="Category"><select style={inputStyle} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>{EXPENSE_CATS.map(c => <option key={c}>{c}</option>)}</select></FormRow>
-        <FormRow label="Amount (৳)"><input style={inputStyle} type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="500" /></FormRow>
+        <FormRow label="Amount (৳ BDT)"><input style={inputStyle} type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="500" /></FormRow>
         <FormRow label="Date"><input style={inputStyle} type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} /></FormRow>
         <FormRow label="Note"><input style={inputStyle} value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="e.g. Lunch with client" /></FormRow>
         <div style={{ display: "flex", gap: 10, marginTop: 16 }}><button onClick={submit} style={btnStyle("#ff5c5c")}>✅ Save</button><button onClick={() => setShow(false)} style={btnStyle("#4a7fa5")}>Cancel</button></div>
@@ -328,14 +411,13 @@ function ExpensesTab({ data, onAdd, onDelete }) {
         <div style={{ fontSize: 11, color: "#4a7fa5", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>🏷 Filter by Category</div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{["All", ...EXPENSE_CATS].map(c => <button key={c} onClick={() => setCatFilter(c)} style={{ background: catFilter === c ? "rgba(255,92,92,0.15)" : "transparent", border: `1px solid ${catFilter === c ? "#ff5c5c80" : "#1e3a5f"}`, color: catFilter === c ? "#ff5c5c" : "#4a7fa5", borderRadius: 99, padding: "4px 12px", fontSize: 12, cursor: "pointer" }}>{c}</button>)}</div>
       </div>
-      {filtered.length > 0 && <div style={{ fontSize: 13, color: "#ff5c5c", marginBottom: 12, fontWeight: 700 }}>Showing {filtered.length} transaction{filtered.length !== 1 ? "s" : ""} · Total: {formatBDT(filteredTotal)}</div>}
-      <TxList items={filtered} onDelete={onDelete} color="#ff5c5c" labelKey="category" />
+      {filtered.length > 0 && <div style={{ fontSize: 13, color: "#ff5c5c", marginBottom: 12, fontWeight: 700 }}>Showing {filtered.length} transaction{filtered.length !== 1 ? "s" : ""} · Total: {f(filteredTotal)}</div>}
+      <TxList items={filtered} onDelete={onDelete} color="#ff5c5c" labelKey="category" f={f} />
     </div>
   );
 }
 
-// ─── SHARED ──────────────────────────────────────────────────
-function TxList({ items, onDelete, color, labelKey }) {
+function TxList({ items, onDelete, color, labelKey, f }) {
   if (items.length === 0) return <EmptyState text="Nothing here yet. Add your first entry!" />;
   return <div>{items.map(item => (
     <div key={item.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #1e3a5f", borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
@@ -344,7 +426,7 @@ function TxList({ items, onDelete, color, labelKey }) {
         <div style={{ fontSize: 11, color: "#4a7fa5", marginTop: 2 }}>{item.date}{item.note ? " · " + item.note : ""}</div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ fontWeight: 800, color, fontSize: 15 }}>{formatBDT(item.amount)}</div>
+        <div style={{ fontWeight: 800, color, fontSize: 15 }}>{f(item.amount)}</div>
         <button onClick={() => onDelete(item.id)} style={{ background: "transparent", border: "none", color: "#ff5c5c50", cursor: "pointer", fontSize: 16, padding: "2px 6px", borderRadius: 6 }} onMouseEnter={e => e.target.style.color = "#ff5c5c"} onMouseLeave={e => e.target.style.color = "#ff5c5c50"}>🗑</button>
       </div>
     </div>
