@@ -999,25 +999,47 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           )}
         </div>
 
-        <div style={{background:totalSavings<0?"rgba(255,92,92,0.08)":`${curLvl.color}10`,border:`1px solid ${totalSavings<0?"rgba(255,92,92,0.35)":curLvl.color+"30"}`,borderRadius:20,padding:24,marginBottom:14}}>
-          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
-            <span style={{fontSize:36}}>{totalSavings<0?"😢":curLvl.emoji}</span>
-            <div>
-              <div style={{fontSize:18,fontWeight:800,color:totalSavings<0?"#ff5c5c":curLvl.color}}>{totalSavings<0?"Broke Soldier":curLvl.name}</div>
-              <div style={{fontSize:12,color:t.subText}}>{totalSavings<0?"Spending exceeds earnings. Time to turn it around.":curLvl.desc}</div>
+        {totalSavings >= 0 ? (
+          // ── Normal: level progression ──
+          <div style={{background:`${curLvl.color}10`,border:`1px solid ${curLvl.color}30`,borderRadius:20,padding:24,marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+              <span style={{fontSize:36}}>{curLvl.emoji}</span>
+              <div>
+                <div style={{fontSize:18,fontWeight:800,color:curLvl.color}}>{curLvl.name}</div>
+                <div style={{fontSize:12,color:t.subText}}>{curLvl.desc}</div>
+              </div>
+              {nextLvl&&<div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:10,color:t.subText}}>Next level</div><div style={{fontSize:13,fontWeight:700,color:t.text}}>{nextLvl.emoji} {nextLvl.name}</div></div>}
             </div>
-            {totalSavings>=0&&nextLvl&&<div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:10,color:t.subText}}>Next level</div><div style={{fontSize:13,fontWeight:700,color:t.text}}>{nextLvl.emoji} {nextLvl.name}</div></div>}
+            <div style={{background:t.sectionBorder,borderRadius:99,height:10,overflow:"hidden",marginBottom:6}}>
+              <div style={{width:progress+"%",background:curLvl.color,height:"100%",borderRadius:99,transition:"width 0.8s"}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
+              <span>${curLvl.minUSD.toLocaleString()}</span>
+              {nextLvl&&<span>{progress.toFixed(1)}% → ${nextLvl.minUSD.toLocaleString()}</span>}
+              {!nextLvl&&<span style={{color:curLvl.color,fontWeight:700}}>🏆 Max Level!</span>}
+            </div>
+            <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total earned: <span style={{color:curLvl.color,fontWeight:700}}>${totalIncomeUSD.toLocaleString("en-US",{maximumFractionDigits:0})}</span></div>
           </div>
-          <div style={{background:t.sectionBorder,borderRadius:99,height:10,overflow:"hidden",marginBottom:6}}>
-            <div style={{width:progress+"%",background:totalSavings<0?"#ff5c5c":curLvl.color,height:"100%",borderRadius:99,transition:"width 0.8s"}}/>
+        ) : (
+          // ── Broke mode: debt-free progress ──
+          <div style={{background:"rgba(255,92,92,0.08)",border:"1px solid rgba(255,92,92,0.35)",borderRadius:20,padding:24,marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+              <span style={{fontSize:36}}>😢</span>
+              <div>
+                <div style={{fontSize:18,fontWeight:800,color:"#ff5c5c"}}>Broke Soldier</div>
+                <div style={{fontSize:12,color:t.subText}}>Earn {f(Math.abs(totalSavings))} more to become debt-free</div>
+              </div>
+            </div>
+            <div style={{background:t.sectionBorder,borderRadius:99,height:10,overflow:"hidden",marginBottom:6}}>
+              <div style={{width:Math.min(100,(totalIncome/totalExpenses)*100)+"%",background:"#ff5c5c",height:"100%",borderRadius:99,transition:"width 0.8s"}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
+              <span>{f(totalIncome)} earned</span>
+              <span style={{color:"#ff5c5c",fontWeight:700}}>{((totalIncome/totalExpenses)*100).toFixed(1)}% of debt covered</span>
+            </div>
+            <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total spent: <span style={{color:"#ff5c5c",fontWeight:700}}>{f(totalExpenses)}</span></div>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
-            <span>${curLvl.minUSD.toLocaleString()}</span>
-            {nextLvl&&<span>{progress.toFixed(1)}% → ${nextLvl.minUSD.toLocaleString()}</span>}
-            {!nextLvl&&<span style={{color:totalSavings<0?"#ff5c5c":curLvl.color,fontWeight:700}}>{totalSavings<0?"💸 In the red!":"🏆 Max Level!"}</span>}
-          </div>
-          <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total earned: <span style={{color:totalSavings<0?"#ff5c5c":curLvl.color,fontWeight:700}}>${totalIncomeUSD.toLocaleString("en-US",{maximumFractionDigits:0})}</span></div>
-        </div>
+        )}
 
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:24,marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,gap:8}}>
