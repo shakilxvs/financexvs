@@ -1006,24 +1006,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             </select>
           )}
           {summaryMode==="average"&&<div style={{fontSize:11,color:t.subText,marginBottom:12}}>Based on {monthsCount} month{monthsCount!==1?"s":""} with transactions</div>}
-          {(()=>{
-            const longestLen = summaryData.reduce((max,[,v])=>Math.max(max,f(v).length),0);
-            const cols = longestLen>16?1:longestLen>11?2:3;
-            return (
-              <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:10}}>
-                {summaryData.map(([l,v,c])=>{
-                  const fmtLen=f(v).length;
-                  const fs=fmtLen>18?12:fmtLen>14?14:16;
-                  return (
-                    <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 12px",textAlign:"center",minWidth:0}}>
-                      <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
-                      <div style={{fontSize:fs,fontWeight:800,color:c,marginTop:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f(v)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
+          <SummaryGrid data={summaryData} f={f} t={t}/>
           </div>
         </div>
 
@@ -1445,6 +1428,24 @@ function PlansTab({ data, onAdd, onUpdate, onDelete, onComplete, f, t, currency,
 }
 
 // ── SHARED ────────────────────────────────────────────────────
+function SummaryGrid({data,f,t}){
+  const maxLen=data.reduce((max,[,v])=>Math.max(max,f(v).length),0);
+  const cols=maxLen>16?1:maxLen>11?2:3;
+  return (
+    <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:10}}>
+      {data.map(([l,v,c])=>{
+        const fl=f(v).length;
+        const fs=fl>18?12:fl>14?14:16;
+        return (
+          <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 12px",textAlign:"center",minWidth:0}}>
+            <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
+            <div style={{fontSize:fs,fontWeight:800,color:c,marginTop:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f(v)}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 function Card({children,color,t}){return <div style={{background:t.cardBg,border:`1px solid ${t.cardBorder}`,borderLeft:`3px solid ${color}`,borderRadius:14,padding:"13px 16px",marginBottom:9}}>{children}</div>;}
 function FormCard({children,color,t}){return <div style={{background:t.sectionBg,border:`1px solid ${color}40`,borderRadius:16,padding:20,marginBottom:20}}>{children}</div>;}
 function FR({label,children,t}){return <div style={{marginBottom:12}}><div style={{fontSize:10,color:t.subText,marginBottom:5,textTransform:"uppercase",letterSpacing:1}}>{label}</div>{children}</div>;}
