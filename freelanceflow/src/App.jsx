@@ -1039,8 +1039,8 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
               <div style={{width:Math.min(100,(totalIncome/totalExpenses)*100)+"%",background:"#ff5c5c",height:"100%",borderRadius:99,transition:"width 0.8s"}}/>
             </div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
-              <span>{f(totalIncome)}</span>
-              <span style={{color:"#ff5c5c",fontWeight:600}}>{((totalIncome/totalExpenses)*100).toFixed(1)}% → {f(totalExpenses)}</span>
+              <span>{f(0)}</span>
+              <span style={{color:"#ff5c5c",fontWeight:600}}>{((totalIncome/totalExpenses)*100).toFixed(1)}% → {f(Math.abs(totalSavings))}</span>
             </div>
             <div style={{fontSize:11,color:t.subText,marginTop:8}}>Earn <span style={{color:"#ff5c5c",fontWeight:700}}>{f(Math.abs(totalSavings))}</span> more to be debt-free</div>
           </div>
@@ -1894,3 +1894,5 @@ function Pills({label,values,active,setActive,color,pretty,t}){
 }
 const iSt=t=>({width:"100%",background:t.inputBg,border:`1px solid ${t.inputBorder}`,borderRadius:9,color:t.inputText||t.text,padding:"10px 12px",fontSize:14,boxSizing:"border-box",outline:"none"});
 function bSt(color){return {background:`${color}18`,border:`1px solid ${color}60`,color,borderRadius:9,padding:"8px 18px",cursor:"pointer",fontSize:13,fontWeight:700,transition:"all 0.2s"};}
+
+
