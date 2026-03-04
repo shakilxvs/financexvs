@@ -117,7 +117,7 @@ const THEMES = {
 // ── Helpers ───────────────────────────────────────────────────
 function today() { return new Date().toISOString().split("T")[0]; }
 function currSym(code) { return CURRENCIES.find(c=>c.code===code)?.symbol||code; }
-function firstName(name) { if (!name) return "User"; return name.trim().split(/\s+/)[0]; }
+function firstName(name) { if (!name) return "User"; const parts = name.trim().split(" ").filter(function(p){return p.length>0;}); return parts[0]||"User"; }
 function fmtAmt(bdtAmt, currency, rates) {
   const r = rates||DEFAULT_RATES;
   const n = Number(bdtAmt)||0;
@@ -152,7 +152,8 @@ function useIsMobile(bp=640) {
   return mob;
 }
 function isAndroidMobile() {
-  return /Android/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent);
+  const ua = navigator.userAgent;
+  return ua.indexOf("Android") !== -1 && ua.indexOf("Mobile") !== -1;
 }
 
 // ── Firebase ──────────────────────────────────────────────────
@@ -786,7 +787,7 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
         <div style={{padding:"20px 24px"}}>
           {/* Invoice meta */}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
-            <div style={{gridColumn:"1/-1"}}><ILbl t={t}>Invoice #</ILbl><input style={iSt(t)} value={inv.invoiceNumber} onChange={e=>setF("invoiceNumber",e.target.value)}/></div>
+            <div style={{gridColumnStart:1,gridColumnEnd:-1}}><ILbl t={t}>Invoice #</ILbl><input style={iSt(t)} value={inv.invoiceNumber} onChange={e=>setF("invoiceNumber",e.target.value)}/></div>
             <div style={{minWidth:0}}><ILbl t={t}>Issue Date</ILbl><input style={{...iSt(t),width:"100%",boxSizing:"border-box"}} type="date" value={inv.issueDate} onChange={e=>setF("issueDate",e.target.value)}/></div>
             <div style={{minWidth:0}}><ILbl t={t}>Due Date</ILbl><input style={{...iSt(t),width:"100%",boxSizing:"border-box"}} type="date" value={inv.dueDate} onChange={e=>setF("dueDate",e.target.value)}/></div>
           </div>
@@ -1031,7 +1032,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             <div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 {wpFields.map(({k,label,placeholder,type})=>(
-                  <div key={k} style={{gridColumn:["workName","workAddress","paymentTerms","invoiceNotes"].includes(k)?"1/-1":"auto"}}>
+                  <div key={k} style={{gridColumn:["workName","workAddress","paymentTerms","invoiceNotes"].includes(k)?"1 / -1":"auto"}}>
                     <ILbl t={t}>{label}</ILbl>
                     <input style={iSt(t)} type={type||"text"} value={wpVals[k]||""} onChange={e=>setWpVals(v=>({...v,[k]:e.target.value}))} placeholder={placeholder}/>
                   </div>
@@ -1429,15 +1430,19 @@ function PlansTab({ data, onAdd, onUpdate, onDelete, onComplete, f, t, currency,
 
 // ── SHARED ────────────────────────────────────────────────────
 function SummaryGrid({data,f,t}){
-  const maxLen=data.reduce((max,[,v])=>Math.max(max,f(v).length),0);
+  let maxLen=0;
+  for(let i=0;i<data.length;i++){ const n=f(data[i][1]).length; if(n>maxLen) maxLen=n; }
   const cols=maxLen>16?1:maxLen>11?2:3;
+  const colStr=cols===1?"1fr":cols===2?"1fr 1fr":"1fr 1fr 1fr";
   return (
-    <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:10}}>
-      {data.map(([l,v,c])=>{
+    <div style={{display:"grid",gridTemplateColumns:colStr,gap:10}}>
+      {data.map(function(item){
+        const l=item[0]; const v=item[1]; const c=item[2];
         const fl=f(v).length;
         const fs=fl>18?12:fl>14?14:16;
+        const bg=c+"10"; const border="1px solid "+c+"30";
         return (
-          <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 12px",textAlign:"center",minWidth:0}}>
+          <div key={l} style={{background:bg,border:border,borderRadius:14,padding:"14px 12px",textAlign:"center",minWidth:0}}>
             <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
             <div style={{fontSize:fs,fontWeight:800,color:c,marginTop:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f(v)}</div>
           </div>
