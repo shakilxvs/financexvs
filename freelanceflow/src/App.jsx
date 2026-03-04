@@ -584,7 +584,7 @@ export default function App() {
     <div style={{minHeight:"100vh",background:t.pageBg,fontFamily:"'Segoe UI',system-ui,sans-serif",color:t.text,transition:"background 0.3s"}}>
       {confirm && <ConfirmPopup message={confirm.message} onConfirm={confirm.onConfirm} onCancel={()=>setConfirm(null)} t={t}/>}
 
-      {page==="profile"  && <ProfilePage  user={user} profile={profile} setProfile={setProfile} workProfile={workProfile} setWorkProfile={setWorkProfile} finance={finance} f={f} t={t} currency={currency} rates={rates} onClose={()=>setPage("main")}/>}
+      {page==="profile"  && <ProfilePage  user={user} profile={profile} setProfile={setProfile} workProfile={workProfile} setWorkProfile={setWorkProfile} finance={finance} f={f} t={t} currency={currency} rates={rates} isMobile={isMobile} onClose={()=>setPage("main")}/>}
       {page==="settings" && <SettingsPage settings={settings} setSetting={setSetting} t={t} installPrompt={installPrompt} setInstallPrompt={setInstallPrompt} onClose={()=>setPage("main")}/>}
       {invoiceOpen       && <InvoiceModal workProfile={workProfile} currency={currency} rates={rates} t={t} onClose={()=>setInvoiceOpen(false)} onSetWorkProfile={()=>{setInvoiceOpen(false);setPage("profile");}} finance={finance} addPending={item=>addItem("pending",item)}/>}
 
@@ -895,7 +895,7 @@ function ILbl({children,t}){return <div style={{fontSize:10,color:t.subText,marg
 
 
 // ── PROFILE PAGE ─────────────────────────────────────────────
-function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, finance, f, t, currency, rates, onClose }) {
+function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, finance, f, t, currency, rates, isMobile, onClose }) {
   const dispName  = profile.customName||user?.displayName||user?.email?.split("@")[0]||"User";
   const [editName, setEditName] = useState(false);
   const [nameVal,  setNameVal]  = useState(dispName);
@@ -942,10 +942,13 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
     ? [["Avg. Earning",avgIncome,"#00e5a0"],["Avg. Spending",avgExpenses,"#ff5c5c"],["Avg. Saving",avgSavings,avgSavings>=0?"#00e5a0":"#ff5c5c"]]
     : [["Earning",mIncome,"#00e5a0"],["Spending",mExpenses,"#ff5c5c"],["Saving",mSavings,mSavings>=0?"#00e5a0":"#ff5c5c"]];
 
-  // ── Dynamic grid for summary: 3-in-a-row → 2-in-a-row → 1-per-row ──
+  // ── Dynamic grid for summary: mobile is tighter so needs fewer cols ──
   const maxAmtLen = Math.max(...summaryData.map(([,v])=>f(v).length));
-  const summaryCols = maxAmtLen > 18 ? "1fr" : maxAmtLen > 13 ? "1fr 1fr" : "1fr 1fr 1fr";
-  // text alignment: center only when all 3 fit in one row
+  // On mobile: 3-col only for very short (≤8), 2-col for medium (≤14), 1-col for long
+  // On desktop: 3-col for short (≤13), 2-col for medium (≤18), 1-col for long
+  const summaryCols = isMobile
+    ? (maxAmtLen > 14 ? "1fr" : maxAmtLen > 8 ? "1fr 1fr" : "1fr 1fr 1fr")
+    : (maxAmtLen > 18 ? "1fr" : maxAmtLen > 13 ? "1fr 1fr" : "1fr 1fr 1fr");
   const summaryTextAlign = summaryCols === "1fr 1fr 1fr" ? "center" : "left";
 
   const wpFields=[
@@ -1019,11 +1022,11 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
 
         {/* Earning Summary */}
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:24,marginBottom:14}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:8}}>
-            <div style={{fontSize:15,fontWeight:700,color:t.text}}>Earning Summary</div>
-            <div style={{display:"flex",gap:4,background:t.tabBg,borderRadius:10,padding:"3px 4px"}}>
-              {[["alltime","All Time"],["average","Average"],["monthly","Monthly"]].map(([id,label])=>(
-                <button key={id} onClick={()=>setSummaryMode(id)} style={{padding:"6px 12px",background:summaryMode===id?t.tabActive:"transparent",border:`1px solid ${summaryMode===id?t.tabActiveBorder:"transparent"}`,borderRadius:8,color:summaryMode===id?t.tabActiveText:t.tabInactive,cursor:"pointer",fontSize:11,fontWeight:summaryMode===id?700:400}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,gap:8}}>
+            <div style={{fontSize:15,fontWeight:700,color:t.text,flexShrink:0}}>Earning Summary</div>
+            <div style={{display:"flex",gap:3,background:t.tabBg,borderRadius:10,padding:"3px 4px",flexShrink:0}}>
+              {[["alltime","All Time"],["average","Avg"],["monthly","Monthly"]].map(([id,label])=>(
+                <button key={id} onClick={()=>setSummaryMode(id)} style={{padding:isMobile?"5px 8px":"6px 12px",background:summaryMode===id?t.tabActive:"transparent",border:`1px solid ${summaryMode===id?t.tabActiveBorder:"transparent"}`,borderRadius:8,color:summaryMode===id?t.tabActiveText:t.tabInactive,cursor:"pointer",fontSize:isMobile?10:11,fontWeight:summaryMode===id?700:400,whiteSpace:"nowrap"}}>
                   {label}
                 </button>
               ))}
