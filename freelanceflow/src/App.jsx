@@ -1413,8 +1413,8 @@ function ChartsSection({ finance, f, t }) {
       <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:12}}>Spending by Category</div>
       {donutSlices.length > 0 ? (
         <div style={{flex:1,minHeight:0,overflow:"hidden",display:"flex",gap:isMobile?14:24,alignItems:"center"}}>
-          {/* Donut — left-aligned, no centering wrapper */}
-          <div style={{flexShrink:0}}>
+          {/* Donut — visual left edge of circle aligns with title via negative margin */}
+          <div style={{flexShrink:0, marginLeft: isMobile ? -20 : -31}}>
             <SVGDonut slices={donutSlices} t={t} size={donutSize}/>
           </div>
           {/* Category list — vertically centered */}
