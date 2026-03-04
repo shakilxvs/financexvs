@@ -7,11 +7,13 @@ import {
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, provider, db } from "./firebase";
 
+
 // ── Constants ─────────────────────────────────────────────────
 const defaultFinance = { income:[], pending:[], expenses:[], plans:[] };
 const EXPENSE_CATS = ["Food","Transport","Software","Office","Utilities","Entertainment","Other"];
 const INCOME_CATS  = ["Project","Salary","Bonus","Retainer","Other"];
 const PLAN_CATS    = ["Equipment","Software","Travel","Education","Marketing","Office","Other"];
+
 
 const CURRENCIES = [
   { code:"BDT", symbol:"৳",   name:"Bangladeshi Taka"  },
@@ -27,6 +29,7 @@ const CURRENCIES = [
 ];
 const DEFAULT_RATES = { USD:1, BDT:110, EUR:0.92, GBP:0.79, AUD:1.55, CAD:1.36, AED:3.67, JPY:149, INR:83, SGD:1.34 };
 
+
 const LEVELS = [
   { name:"Prelude",        emoji:"🌱", color:"#6bcb77", minUSD:0       , desc:"Every journey starts here."        },
   { name:"Sterling",       emoji:"⚡", color:"#4d96ff", minUSD:100     , desc:"Momentum is building!"             },
@@ -38,6 +41,7 @@ const LEVELS = [
   { name:"Empire Builder", emoji:"🏆", color:"#00e5a0", minUSD:500000  , desc:"You built an empire. Legendary."  },
 ];
 
+
 const defaultWorkProfile = {
   workName:"", workEmail:"", workPhone:"", workAddress:"",
   workCity:"", workCountry:"", workZip:"", website:"",
@@ -45,6 +49,7 @@ const defaultWorkProfile = {
   paymentTerms:"Due upon receipt", invoiceNotes:"",
   invoiceCount:0,
 };
+
 
 // ── FA6 Icons ─────────────────────────────────────────────────
 const ICONS = {
@@ -74,9 +79,9 @@ const ICONS = {
   mobile:     { vb:"0 0 384 512", d:"M16 64C16 28.7 44.7 0 80 0H304c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H80c-35.3 0-64-28.7-64-64V64zM224 448a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM304 64H80V384H304V64z" },
   plus:       { vb:"0 0 448 512", d:"M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z" },
   xmark:      { vb:"0 0 384 512", d:"M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" },
-  clock:      { vb:"0 0 512 512", d:"M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.5 33.3-6.5s4.5-25.9-6.5-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z" },
   withdrawWallet: { vb:"0 0 512 512", paths:["M155.5,471C229.66,471 303.82,471.03 377.97,470.97C389.03,470.96 399.77,468.98 410.09,464.83C442.14,451.94 463.1,418 459.85,383.72C459.21,377.02 456.26,370.87 449.98,367.87C445.48,365.73 440.26,364.51 435.27,364.15C424.38,363.37 413.33,365.11 402.67,361.08C382.78,353.54 372.25,336.86 373.24,318.57C374.5,295.41 393.86,278.04 417.07,278C424.07,277.99 431.08,278.13 438.07,277.94C449.76,277.62 458.99,269.59 459.85,258.59C462.12,229.56 454.37,204.29 431.44,184.92C417.06,172.78 400.5,166.21 381.63,166.04C362.8,165.86 343.97,166.02 325.14,165.99C318.32,165.98 318.02,165.69 318.01,158.96C317.99,134.46 317.49,109.95 318.13,85.47C318.86,57.81 290.06,36.9 263.92,46.57C235.53,57.07 207.22,67.79 178.91,78.49C149.81,89.48 120.65,100.31 91.7,111.68C68.36,120.85 54.01,142.7 54,167.74C53.99,241.24 53.98,314.73 54.04,388.22C54.04,392.86 54.39,397.52 54.93,402.13C58.42,431.75 82.22,458.99 110.93,467.3C125.31,471.46 139.88,470.91 155.5,471M285,141.5C285,138.33 285,135.17 285,132C284.99,116.85 285.06,101.69 284.95,86.53C284.9,79.05 280.57,76.07 273.43,78.36C270.9,79.18 268.4,80.1 265.91,81.04C237.15,91.9 208.39,102.79 179.63,113.65C154.43,123.16 129.18,132.51 104.05,142.21C90.32,147.5 82.31,167.08 88.4,179.85C89.13,179.53 89.93,179.32 90.59,178.88C104.61,169.49 120.17,165.82 136.91,165.95C160.39,166.14 183.88,166 207.37,166C231.19,166 255.01,165.92 278.83,166.05C283.28,166.08 285.24,164.61 285.05,159.99C284.8,154.17 285,148.33 285,141.5M153.82,241.03C151.52,241.38 149.2,241.61 146.93,242.11C136.71,244.34 131.95,255.85 137.3,264.88C141.63,272.2 148.78,272.92 155.99,272.94C201.98,273.05 247.98,273.02 293.97,272.95C297.1,272.94 300.28,272.5 303.34,271.82C313.29,269.59 317.96,258.16 312.82,249.3C308.44,241.77 301.14,241.06 293.73,241.05C247.4,240.96 201.08,241.01 153.82,241.03","M456.4,339.95C457.6,337 459.58,334.11 459.83,331.09C460.36,324.64 460.02,318.11 459.99,311.61C459.94,303.61 455.77,299.17 447.86,299.06C437.53,298.92 427.19,298.83 416.87,299.1C409.98,299.28 403.83,301.76 399.65,307.6C394.48,314.8 393.32,322.69 397.46,330.65C401.65,338.72 408.99,342.55 417.86,342.89C427.34,343.25 436.85,343.2 446.33,342.88C449.51,342.77 452.65,341.28 456.4,339.95"] },
 };
+
 
 function Ico({ name, size=16, color="currentColor", style:s={} }) {
   const ic = ICONS[name];
@@ -88,6 +93,8 @@ function Ico({ name, size=16, color="currentColor", style:s={} }) {
   );
   return <svg width={size} height={size} viewBox={ic.vb} fill={color} style={{flexShrink:0,display:"inline-block",...s}}><path d={ic.d}/></svg>;
 }
+
+
 
 
 // ── Themes ────────────────────────────────────────────────────
@@ -114,10 +121,11 @@ const THEMES = {
   }
 };
 
+
 // ── Helpers ───────────────────────────────────────────────────
 function today() { return new Date().toISOString().split("T")[0]; }
 function currSym(code) { return CURRENCIES.find(c=>c.code===code)?.symbol||code; }
-function firstName(name) { if (!name) return "User"; const parts = name.trim().split(" ").filter(function(p){return p.length>0;}); return parts[0]||"User"; }
+function firstName(name) { if (!name) return "User"; return name.trim().split(/\s+/)[0]; }
 function fmtAmt(bdtAmt, currency, rates) {
   const r = rates||DEFAULT_RATES;
   const n = Number(bdtAmt)||0;
@@ -152,9 +160,9 @@ function useIsMobile(bp=640) {
   return mob;
 }
 function isAndroidMobile() {
-  const ua = navigator.userAgent;
-  return ua.indexOf("Android") !== -1 && ua.indexOf("Mobile") !== -1;
+  return /Android/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent);
 }
+
 
 // ── Firebase ──────────────────────────────────────────────────
 async function loadFromCloud(uid) {
@@ -177,6 +185,7 @@ async function saveToCloud(uid, finance, settings, profile, workProfile) {
   catch(e) { console.error("Save error:",e); }
 }
 
+
 // ── User Avatar ───────────────────────────────────────────────
 function UserAvatar({ photoURL, size=30, t }) {
   if (photoURL) return <img src={photoURL} alt="" style={{width:size,height:size,borderRadius:"50%",border:"2px solid rgba(0,229,160,0.3)",flexShrink:0,objectFit:"cover"}} />;
@@ -186,6 +195,7 @@ function UserAvatar({ photoURL, size=30, t }) {
     </div>
   );
 }
+
 
 // ── Confirm Popup ─────────────────────────────────────────────
 function ConfirmPopup({ message, onConfirm, onCancel, t }) {
@@ -203,6 +213,7 @@ function ConfirmPopup({ message, onConfirm, onCancel, t }) {
     </div>
   );
 }
+
 
 // ── 3-Dot Menu ────────────────────────────────────────────────
 function ThreeDotMenu({ options, t }) {
@@ -229,6 +240,7 @@ function ThreeDotMenu({ options, t }) {
     </div>
   );
 }
+
 
 // ── Hamburger Menu ────────────────────────────────────────────
 function HamburgerMenu({ onLogout, onProfile, onSettings, t }) {
@@ -264,6 +276,7 @@ function HamburgerMenu({ onLogout, onProfile, onSettings, t }) {
     </div>
   );
 }
+
 
 // ── Currency Dropdown ─────────────────────────────────────────
 function CurrencyDropdown({ currency, setCurrency, rates, ratesLoading }) {
@@ -307,6 +320,7 @@ function CurrencyDropdown({ currency, setCurrency, rates, ratesLoading }) {
   );
 }
 
+
 // ── Inline Edit ───────────────────────────────────────────────
 function InlineEdit({ item, fields, onSave, onCancel, t, currency, rates }) {
   const [vals,setVals]=useState(()=>{
@@ -343,6 +357,8 @@ function InlineEdit({ item, fields, onSave, onCancel, t, currency, rates }) {
 }
 
 
+
+
 // ── Invoice Printer ───────────────────────────────────────────
 function printInvoice(inv, wp, sym) {
   const items = inv.items||[];
@@ -351,6 +367,7 @@ function printInvoice(inv, wp, sym) {
   const discAmt  = Number(inv.discount)||0;
   const total    = subtotal+taxAmt-discAmt;
   const fmt = n => sym+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+
 
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ${inv.invoiceNumber||""}</title>
 <style>
@@ -436,9 +453,11 @@ function printInvoice(inv, wp, sym) {
   </div>`:""}
 </div><script>window.onload=()=>{window.print();}<\/script></body></html>`;
 
+
   const win=window.open("","_blank","width=900,height=700");
   if (win) { win.document.write(html); win.document.close(); }
 }
+
 
 // ── ROOT APP ──────────────────────────────────────────────────
 export default function App() {
@@ -456,6 +475,7 @@ export default function App() {
   const [invoiceOpen,  setInvoiceOpen]  = useState(false);
   const [installPrompt,setInstallPrompt]= useState(null);
 
+
   const isMobile = useIsMobile();
   const t        = THEMES[settings.theme]||THEMES.dark;
   const currency = settings.currency||"BDT";
@@ -463,6 +483,7 @@ export default function App() {
   const dispName = profile.customName||user?.displayName||user?.email?.split("@")[0]||"User";
   const fname    = firstName(dispName);
   const f        = n=>fmtAmt(n,currency,rates);
+
 
   // Live exchange rates
   useEffect(()=>{
@@ -478,6 +499,7 @@ export default function App() {
     const iv=setInterval(fetchRates,30*60*1000);
     return()=>clearInterval(iv);
   },[]);
+
 
   // Auth listener
   useEffect(()=>{
@@ -495,12 +517,14 @@ export default function App() {
     return unsub;
   },[]);
 
+
   // Auto-save
   useEffect(()=>{
     if(!user) return;
     const timer=setTimeout(()=>saveToCloud(user.uid,finance,settings,profile,workProfile),800);
     return()=>clearTimeout(timer);
   },[finance,settings,profile,workProfile,user]);
+
 
   // PWA install prompt
   useEffect(()=>{
@@ -509,9 +533,11 @@ export default function App() {
     return()=>window.removeEventListener("beforeinstallprompt",h);
   },[]);
 
+
   const login  = ()=>signInWithPopup(auth,provider);
   const logout = ()=>{ signOut(auth); setFinance(defaultFinance); setProfile({customName:""}); setWorkProfile({...defaultWorkProfile}); setSettings({currency:"BDT",theme:"dark"}); setTab("dashboard"); setPage("main"); };
   const setSetting = (key,val)=>setSettings(s=>({...s,[key]:val}));
+
 
   // Data ops
   const addItem       = (type,item)      => setFinance(d=>({...d,[type]:[item,...d[type]]}));
@@ -529,6 +555,7 @@ export default function App() {
     setFinance(d=>({...d,plans:d.plans.map(p=>p.id===id?{...p,completed:true,completionDate}:p),expenses:[{id:Date.now(),category:plan.category||"Other",amount:plan.budget,date:completionDate,note:"From plan: "+plan.title},...d.expenses]}));
   };
 
+
   const totalIncome   = finance.income.reduce((s,i)=>s+Number(i.amount),0);
   const totalExpenses = finance.expenses.reduce((s,i)=>s+Number(i.amount),0);
   const totalPending  = finance.pending.reduce((s,i)=>s+Number(i.amount),0);
@@ -537,8 +564,10 @@ export default function App() {
   const monthIncome   = finance.income.filter(i=>i.date?.startsWith(thisMonth)).reduce((s,i)=>s+Number(i.amount),0);
   const monthExpenses = finance.expenses.filter(i=>i.date?.startsWith(thisMonth)).reduce((s,i)=>s+Number(i.amount),0);
 
+
   if (authLoading) return <Splash/>;
   if (!user)       return <LoginScreen onGoogleLogin={login}/>;
+
 
   const tabs=[
     {id:"dashboard",label:"Dashboard", icon:"chartLine",      color:"#00e5a0"},
@@ -549,13 +578,16 @@ export default function App() {
   ];
   const commonProps={f,t,currency,rates};
 
+
   return (
     <div style={{minHeight:"100vh",background:t.pageBg,fontFamily:"'Segoe UI',system-ui,sans-serif",color:t.text,transition:"background 0.3s"}}>
       {confirm && <ConfirmPopup message={confirm.message} onConfirm={confirm.onConfirm} onCancel={()=>setConfirm(null)} t={t}/>}
 
+
       {page==="profile"  && <ProfilePage  user={user} profile={profile} setProfile={setProfile} workProfile={workProfile} setWorkProfile={setWorkProfile} finance={finance} f={f} t={t} currency={currency} rates={rates} onClose={()=>setPage("main")}/>}
       {page==="settings" && <SettingsPage settings={settings} setSetting={setSetting} t={t} installPrompt={installPrompt} setInstallPrompt={setInstallPrompt} onClose={()=>setPage("main")}/>}
       {invoiceOpen       && <InvoiceModal workProfile={workProfile} currency={currency} rates={rates} t={t} onClose={()=>setInvoiceOpen(false)} onSetWorkProfile={()=>{setInvoiceOpen(false);setPage("profile");}} finance={finance} addPending={item=>addItem("pending",item)}/>}
+
 
       {/* ── Floating Header ── */}
       <div style={{padding:"14px 14px 0",position:"sticky",top:0,zIndex:100}}>
@@ -599,6 +631,7 @@ export default function App() {
         </div>
       </div>
 
+
       {/* ── Tabs ── */}
       <div style={{display:"flex",justifyContent:"center",padding:"12px 14px 0"}}>
         <div style={{display:"flex",gap:4,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",background:t.tabBg,borderRadius:14,padding:"5px 6px",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)"}}>
@@ -609,6 +642,7 @@ export default function App() {
           ))}
         </div>
       </div>
+
 
       {/* ── Content ── */}
       <div style={{maxWidth:820,margin:"0 auto",padding:"14px 14px 48px"}}>
@@ -623,6 +657,8 @@ export default function App() {
 }
 
 
+
+
 // ── SPLASH ────────────────────────────────────────────────────
 function Splash() {
   return (
@@ -634,6 +670,7 @@ function Splash() {
   );
 }
 
+
 // ── LOGIN ─────────────────────────────────────────────────────
 function LoginScreen({ onGoogleLogin }) {
   const [mode,    setMode]    = useState("signin");
@@ -643,7 +680,9 @@ function LoginScreen({ onGoogleLogin }) {
   const [error,   setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
+
   const errMap={"auth/user-not-found":"No account found with this email.","auth/wrong-password":"Incorrect password.","auth/email-already-in-use":"Email already registered. Sign in instead.","auth/weak-password":"Password must be at least 6 characters.","auth/invalid-email":"Please enter a valid email.","auth/too-many-requests":"Too many attempts. Please try again later.","auth/invalid-credential":"Incorrect email or password."};
+
 
   const handleEmail=async()=>{
     if (!email||!password){setError("Please fill in all fields.");return;}
@@ -718,11 +757,13 @@ function LoginScreen({ onGoogleLogin }) {
   );
 }
 
+
 // ── INVOICE MODAL ─────────────────────────────────────────────
 function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfile, finance, addPending }) {
   const hasWorkProfile = workProfile.workName && workProfile.workEmail;
   const sym = currSym(currency);
   const invoiceNum = `${workProfile.invoicePrefix||"INV-"}${String((workProfile.invoiceCount||0)+1).padStart(3,"0")}${workProfile.invoiceSuffix||""}`;
+
 
   const [inv, setInv] = useState({
     invoiceNumber: invoiceNum,
@@ -739,16 +780,20 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
   const addItem=()=>setInv(p=>({...p,items:[...p.items,{desc:"",qty:"1",rate:""}]}));
   const removeItem=i=>setInv(p=>({...p,items:p.items.filter((_,idx)=>idx!==i)}));
 
+
   const subtotal = inv.items.reduce((s,i)=>s+(Number(i.qty)||0)*(Number(i.rate)||0),0);
   const taxAmt   = subtotal*(Number(inv.taxRate)||0)/100;
   const discAmt  = Number(inv.discount)||0;
   const total    = subtotal+taxAmt-discAmt;
   const fmt      = n=>sym+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 
+
   const handleDownload=()=>{ printInvoice(inv, workProfile, sym); };
+
 
   const ovSt={position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:9500,display:"flex",alignItems:"flex-start",justifyContent:"center",overflowY:"auto",padding:"20px 14px 48px"};
   const boxSt={background:t.pageBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,width:"100%",maxWidth:700,marginTop:0};
+
 
   if (!hasWorkProfile) {
     return (
@@ -770,6 +815,7 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
     );
   }
 
+
   return (
     <div style={ovSt}>
       <div style={boxSt}>
@@ -784,13 +830,15 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
           </button>
         </div>
 
+
         <div style={{padding:"20px 24px"}}>
           {/* Invoice meta */}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
-            <div style={{gridColumnStart:1,gridColumnEnd:-1}}><ILbl t={t}>Invoice #</ILbl><input style={iSt(t)} value={inv.invoiceNumber} onChange={e=>setF("invoiceNumber",e.target.value)}/></div>
+            <div style={{gridColumn:"1/-1"}}><ILbl t={t}>Invoice #</ILbl><input style={iSt(t)} value={inv.invoiceNumber} onChange={e=>setF("invoiceNumber",e.target.value)}/></div>
             <div style={{minWidth:0}}><ILbl t={t}>Issue Date</ILbl><input style={{...iSt(t),width:"100%",boxSizing:"border-box"}} type="date" value={inv.issueDate} onChange={e=>setF("issueDate",e.target.value)}/></div>
             <div style={{minWidth:0}}><ILbl t={t}>Due Date</ILbl><input style={{...iSt(t),width:"100%",boxSizing:"border-box"}} type="date" value={inv.dueDate} onChange={e=>setF("dueDate",e.target.value)}/></div>
           </div>
+
 
           {/* From (auto-filled) */}
           <div style={{background:`rgba(0,229,160,0.05)`,border:`1px solid rgba(0,229,160,0.2)`,borderRadius:14,padding:16,marginBottom:16}}>
@@ -798,6 +846,7 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
             <div style={{fontSize:14,fontWeight:700,color:t.text}}>{workProfile.workName}</div>
             <div style={{fontSize:12,color:t.subText,marginTop:4,lineHeight:1.7}}>{[workProfile.workEmail,workProfile.workPhone,workProfile.workAddress,workProfile.workCity,workProfile.workCountry].filter(Boolean).join(" · ")}</div>
           </div>
+
 
           {/* Bill To */}
           <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:14,padding:16,marginBottom:16}}>
@@ -809,6 +858,7 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
               <div><ILbl t={t}>City / Country</ILbl><input style={iSt(t)} value={inv.clientCity} onChange={e=>setF("clientCity",e.target.value)} placeholder="City, Country"/></div>
             </div>
           </div>
+
 
           {/* Line items */}
           <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:14,padding:16,marginBottom:16}}>
@@ -833,11 +883,13 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
             </button>
           </div>
 
+
           {/* Totals + tax */}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
             <div><ILbl t={t}>Tax Rate (%)</ILbl><input style={iSt(t)} type="number" value={inv.taxRate} onChange={e=>setF("taxRate",e.target.value)} placeholder="0"/></div>
             <div><ILbl t={t}>{`Discount (${sym})`}</ILbl><input style={iSt(t)} type="number" value={inv.discount} onChange={e=>setF("discount",e.target.value)} placeholder="0"/></div>
           </div>
+
 
           {/* Summary */}
           <div style={{background:`rgba(0,229,160,0.06)`,border:"1px solid rgba(0,229,160,0.25)",borderRadius:14,padding:16,marginBottom:16}}>
@@ -852,10 +904,12 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
             </div>
           </div>
 
+
           {/* Notes */}
           <div style={{marginBottom:24}}><ILbl t={t}>Notes / Payment Terms (optional)</ILbl>
             <textarea style={{...iSt(t),minHeight:60,resize:"vertical"}} value={inv.notes} onChange={e=>setF("notes",e.target.value)} placeholder="e.g. Payment due within 30 days. Thank you for your business!"/>
           </div>
+
 
           {/* Actions */}
           <div style={{display:"flex",gap:10}}>
@@ -872,6 +926,8 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
 function ILbl({children,t}){return <div style={{fontSize:10,color:t.subText,marginBottom:5,textTransform:"uppercase",letterSpacing:1}}>{children}</div>;}
 
 
+
+
 // ── PROFILE PAGE ─────────────────────────────────────────────
 function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, finance, f, t, currency, rates, onClose }) {
   const dispName  = profile.customName||user?.displayName||user?.email?.split("@")[0]||"User";
@@ -883,6 +939,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
   const [summaryMode, setSummaryMode] = useState("alltime"); // alltime | average | monthly
   const [summaryMonth, setSummaryMonth] = useState(new Date().toISOString().slice(0,7));
 
+
   const saveName=async()=>{
     setSaving(true);
     try{if(user) await updateProfile(user,{displayName:nameVal.trim()});}catch{}
@@ -891,9 +948,11 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
   };
   const saveWP=()=>{ setWorkProfile({...wpVals}); setWpEdit(false); };
 
+
   const totalIncome   = finance.income.reduce((s,i)=>s+Number(i.amount),0);
   const totalExpenses = finance.expenses.reduce((s,i)=>s+Number(i.amount),0);
   const totalSavings  = totalIncome-totalExpenses;
+
 
   const allMonthsWithData = Array.from(new Set([
     ...finance.income.map(i=>i.date?.slice(0,7)),
@@ -904,21 +963,25 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
   const avgExpenses = totalExpenses/monthsCount;
   const avgSavings  = avgIncome-avgExpenses;
 
+
   const allMonths=Array.from(new Set([...finance.income,...finance.expenses].map(i=>i.date?.slice(0,7)).filter(Boolean))).sort().reverse();
   const mIncome   = finance.income.filter(i=>i.date?.startsWith(summaryMonth)).reduce((s,i)=>s+Number(i.amount),0);
   const mExpenses = finance.expenses.filter(i=>i.date?.startsWith(summaryMonth)).reduce((s,i)=>s+Number(i.amount),0);
   const mSavings  = mIncome-mExpenses;
+
 
   const totalIncomeUSD = totalIncome/(rates?.BDT||110);
   const curLvl  = getLevel(totalIncomeUSD);
   const nextLvl = LEVELS[LEVELS.indexOf(curLvl)+1];
   const progress = nextLvl ? Math.min(100,((totalIncomeUSD-curLvl.minUSD)/(nextLvl.minUSD-curLvl.minUSD))*100) : 100;
 
+
   const summaryData = summaryMode==="alltime"
     ? [["Earning",totalIncome,"#00e5a0"],["Spending",totalExpenses,"#ff5c5c"],["Saving",totalSavings,totalSavings>=0?"#00e5a0":"#ff5c5c"]]
     : summaryMode==="average"
     ? [["Avg. Earning",avgIncome,"#00e5a0"],["Avg. Spending",avgExpenses,"#ff5c5c"],["Avg. Saving",avgSavings,avgSavings>=0?"#00e5a0":"#ff5c5c"]]
     : [["Earning",mIncome,"#00e5a0"],["Spending",mExpenses,"#ff5c5c"],["Saving",mSavings,mSavings>=0?"#00e5a0":"#ff5c5c"]];
+
 
   const wpFields=[
     {k:"workName",label:"Business / Full Name",placeholder:"e.g. Shakil Ahmed Designs"},
@@ -936,6 +999,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
     {k:"invoiceNotes",label:"Default Invoice Notes",placeholder:"Thank you for your business!"},
   ];
 
+
   return (
     <div style={{position:"fixed",inset:0,background:t.pageBg,zIndex:9000,overflowY:"auto",fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
       <div style={{padding:"14px 14px 0"}}>
@@ -945,6 +1009,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
         </div>
       </div>
       <div style={{maxWidth:640,margin:"20px auto",padding:"0 14px 48px"}}>
+
 
         {/* Avatar + Name */}
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:28,textAlign:"center",marginBottom:14}}>
@@ -968,6 +1033,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           )}
         </div>
 
+
         {/* Level */}
         <div style={{background:`${curLvl.color}10`,border:`1px solid ${curLvl.color}30`,borderRadius:20,padding:24,marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
@@ -989,6 +1055,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total earned: <span style={{color:curLvl.color,fontWeight:700}}>${totalIncomeUSD.toLocaleString("en-US",{maximumFractionDigits:0})}</span></div>
         </div>
 
+
         {/* Earning Summary (merged) */}
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:24,marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:8}}>
@@ -1007,9 +1074,16 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             </select>
           )}
           {summaryMode==="average"&&<div style={{fontSize:11,color:t.subText,marginBottom:12}}>Based on {monthsCount} month{monthsCount!==1?"s":""} with transactions</div>}
-          <SummaryGrid data={summaryData} f={f} t={t}/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {summaryData.map(([l,v,c])=>(
+              <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 12px",textAlign:"center",minWidth:0}}>
+                <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
+                <div style={{fontSize:14,fontWeight:800,color:c,marginTop:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f(v)}</div>
+              </div>
+            ))}
           </div>
         </div>
+
 
         {/* Work Profile */}
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:24}}>
@@ -1032,7 +1106,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             <div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 {wpFields.map(({k,label,placeholder,type})=>(
-                  <div key={k} style={{gridColumn:["workName","workAddress","paymentTerms","invoiceNotes"].includes(k)?"1 / -1":"auto"}}>
+                  <div key={k} style={{gridColumn:["workName","workAddress","paymentTerms","invoiceNotes"].includes(k)?"1/-1":"auto"}}>
                     <ILbl t={t}>{label}</ILbl>
                     <input style={iSt(t)} type={type||"text"} value={wpVals[k]||""} onChange={e=>setWpVals(v=>({...v,[k]:e.target.value}))} placeholder={placeholder}/>
                   </div>
@@ -1049,6 +1123,8 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
     </div>
   );
 }
+
+
 
 
 // ── SETTINGS PAGE ─────────────────────────────────────────────
@@ -1128,6 +1204,7 @@ function SettingsPage({ settings, setSetting, t, installPrompt, setInstallPrompt
   );
 }
 
+
 // ── DASHBOARD ─────────────────────────────────────────────────
 function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, finance, fname, f, t }) {
   const activePlans=(finance.plans||[]).filter(p=>!p.completed).length;
@@ -1145,18 +1222,14 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         Hey, {fname}!
         <span style={{fontSize:13,color:t.subText,fontWeight:400,marginLeft:4}}>{new Date().toLocaleString("default",{month:"long",year:"numeric"})}</span>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-        {cards.map(c=>{
-          const fmtLen = f(c.value).length;
-          const fs = fmtLen>18?10:fmtLen>15?12:fmtLen>12?14:16;
-          return (
-            <div key={c.label} style={{background:`${c.color}12`,border:`1px solid ${c.color}30`,borderRadius:18,padding:"18px 14px",minWidth:0,overflow:"hidden"}}>
-              <Ico name={c.icon} size={20} color={c.color}/>
-              <div style={{fontSize:10,color:t.subText,marginTop:10,textTransform:"uppercase",letterSpacing:1}}>{c.label}</div>
-              <div style={{fontSize:fs,fontWeight:800,color:c.color,marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f(c.value)}</div>
-            </div>
-          );
-        })}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12,marginBottom:16}}>
+        {cards.map(c=>(
+          <div key={c.label} style={{background:`${c.color}12`,border:`1px solid ${c.color}30`,borderRadius:18,padding:"20px 18px"}}>
+            <Ico name={c.icon} size={22} color={c.color}/>
+            <div style={{fontSize:10,color:t.subText,marginTop:10,textTransform:"uppercase",letterSpacing:1}}>{c.label}</div>
+            <div style={{fontSize:18,fontWeight:800,color:c.color,marginTop:4}}>{f(c.value)}</div>
+          </div>
+        ))}
       </div>
       {activePlans>0&&<div style={{background:"rgba(147,112,219,0.08)",border:"1px solid rgba(147,112,219,0.3)",borderRadius:16,padding:"13px 18px",marginBottom:12,display:"flex",alignItems:"center",gap:12}}>
         <Ico name="bullseye" size={24} color="#9370db"/>
@@ -1164,12 +1237,10 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
       </div>}
       <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20,marginBottom:12}}>
         <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8}}><Ico name="chartLine" size={15} color="#00e5a0"/> This Month</div>
-        <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
-          {[["EARNED",monthIncome,"#00e5a0"],["SPENT",monthExpenses,"#ff5c5c"],["SAVED",monthIncome-monthExpenses,monthIncome-monthExpenses>=0?"#00e5a0":"#ff5c5c"]].map(([l,v,c])=>{
-            const fmtLen=f(v).length;
-            const fs=fmtLen>18?13:fmtLen>14?16:fmtLen>10?19:22;
-            return <div key={l}><div style={{fontSize:11,color:t.subText}}>{l}</div><div style={{fontSize:fs,fontWeight:800,color:c}}>{f(v)}</div></div>;
-          })}
+        <div style={{display:"flex",gap:24,flexWrap:"wrap"}}>
+          {[["EARNED",monthIncome,"#00e5a0"],["SPENT",monthExpenses,"#ff5c5c"],["SAVED",monthIncome-monthExpenses,monthIncome-monthExpenses>=0?"#00e5a0":"#ff5c5c"]].map(([l,v,c])=>(
+            <div key={l}><div style={{fontSize:11,color:t.subText}}>{l}</div><div style={{fontSize:22,fontWeight:800,color:c}}>{f(v)}</div></div>
+          ))}
         </div>
         {monthIncome>0&&<div style={{marginTop:14}}>
           <div style={{background:t.sectionBorder,borderRadius:99,height:8,overflow:"hidden"}}>
@@ -1179,12 +1250,12 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         </div>}
       </div>
       <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20}}>
-        <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8}}><Ico name="clock" size={14} color="#4a7fa5"/> Recent Transactions</div>
+        <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8}}><Ico name="hourglass" size={14} color="#4a7fa5"/> Recent Transactions</div>
         {recentTx.length===0&&<div style={{color:t.subText,fontSize:13}}>No transactions yet. Add some!</div>}
         {recentTx.map(tx=>(
           <div key={tx.id+tx.type} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:`1px solid ${t.sectionBorder}`}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <Ico name={tx.type==="income"?"creditCard":tx.type==="pending"?"hourglass":"cardFill"} size={14} color={tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}/>
+              <Ico name={tx.type==="income"?"coins":tx.type==="pending"?"hourglass":"cardFill"} size={14} color={tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}/>
               <div><div style={{fontSize:13,fontWeight:600,color:t.text}}>{tx.client||tx.category||"—"}</div><div style={{fontSize:11,color:t.subText}}>{tx.date}</div></div>
             </div>
             <div style={{fontWeight:800,fontSize:14,color:tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}}>{tx.type==="expense"?"−":"+"}{f(tx.amount)}</div>
@@ -1194,6 +1265,8 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
     </div>
   );
 }
+
+
 
 
 // ── INCOME TAB ────────────────────────────────────────────────
@@ -1239,6 +1312,7 @@ function IncomeTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates }) {
     </div>
   );
 }
+
 
 // ── PENDING TAB ───────────────────────────────────────────────
 function PendingTab({ data, onAdd, onMarkPaid, onUpdate, onDelete, onOpenInvoice, f, t, currency, rates }) {
@@ -1296,6 +1370,7 @@ function PendingTab({ data, onAdd, onMarkPaid, onUpdate, onDelete, onOpenInvoice
   );
 }
 
+
 // ── EXPENSES TAB ──────────────────────────────────────────────
 function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates }) {
   const [form,setForm]=useState({category:"Food",amount:"",date:today(),note:""});
@@ -1345,6 +1420,7 @@ function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates })
     </div>
   );
 }
+
 
 // ── PLANS TAB ─────────────────────────────────────────────────
 function PlansTab({ data, onAdd, onUpdate, onDelete, onComplete, f, t, currency, rates }) {
@@ -1428,29 +1504,8 @@ function PlansTab({ data, onAdd, onUpdate, onDelete, onComplete, f, t, currency,
   );
 }
 
+
 // ── SHARED ────────────────────────────────────────────────────
-function SummaryGrid({data,f,t}){
-  let maxLen=0;
-  for(let i=0;i<data.length;i++){ const n=f(data[i][1]).length; if(n>maxLen) maxLen=n; }
-  const cols=maxLen>16?1:maxLen>11?2:3;
-  const colStr=cols===1?"1fr":cols===2?"1fr 1fr":"1fr 1fr 1fr";
-  return (
-    <div style={{display:"grid",gridTemplateColumns:colStr,gap:10}}>
-      {data.map(function(item){
-        const l=item[0]; const v=item[1]; const c=item[2];
-        const fl=f(v).length;
-        const fs=fl>18?12:fl>14?14:16;
-        const bg=c+"10"; const border="1px solid "+c+"30";
-        return (
-          <div key={l} style={{background:bg,border:border,borderRadius:14,padding:"14px 12px",textAlign:"center",minWidth:0}}>
-            <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
-            <div style={{fontSize:fs,fontWeight:800,color:c,marginTop:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f(v)}</div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 function Card({children,color,t}){return <div style={{background:t.cardBg,border:`1px solid ${t.cardBorder}`,borderLeft:`3px solid ${color}`,borderRadius:14,padding:"13px 16px",marginBottom:9}}>{children}</div>;}
 function FormCard({children,color,t}){return <div style={{background:t.sectionBg,border:`1px solid ${color}40`,borderRadius:16,padding:20,marginBottom:20}}>{children}</div>;}
 function FR({label,children,t}){return <div style={{marginBottom:12}}><div style={{fontSize:10,color:t.subText,marginBottom:5,textTransform:"uppercase",letterSpacing:1}}>{label}</div>{children}</div>;}
@@ -1467,3 +1522,8 @@ function Pills({label,values,active,setActive,color,pretty,t}){
 }
 const iSt=t=>({width:"100%",background:t.inputBg,border:`1px solid ${t.inputBorder}`,borderRadius:9,color:t.inputText||t.text,padding:"10px 12px",fontSize:14,boxSizing:"border-box",outline:"none"});
 function bSt(color){return {background:`${color}18`,border:`1px solid ${color}60`,color,borderRadius:9,padding:"8px 18px",cursor:"pointer",fontSize:13,fontWeight:700,transition:"all 0.2s"};}
+
+
+
+
+
