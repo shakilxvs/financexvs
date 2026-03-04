@@ -72,11 +72,17 @@ const ICONS = {
   mobile:     { vb:"0 0 384 512", d:"M16 64C16 28.7 44.7 0 80 0H304c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H80c-35.3 0-64-28.7-64-64V64zM224 448a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM304 64H80V384H304V64z" },
   plus:       { vb:"0 0 448 512", d:"M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z" },
   xmark:      { vb:"0 0 384 512", d:"M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" },
+  withdrawWallet: { vb:"0 0 512 512", paths:["M155.5,471C229.66,471 303.82,471.03 377.97,470.97C389.03,470.96 399.77,468.98 410.09,464.83C442.14,451.94 463.1,418 459.85,383.72C459.21,377.02 456.26,370.87 449.98,367.87C445.48,365.73 440.26,364.51 435.27,364.15C424.38,363.37 413.33,365.11 402.67,361.08C382.78,353.54 372.25,336.86 373.24,318.57C374.5,295.41 393.86,278.04 417.07,278C424.07,277.99 431.08,278.13 438.07,277.94C449.76,277.62 458.99,269.59 459.85,258.59C462.12,229.56 454.37,204.29 431.44,184.92C417.06,172.78 400.5,166.21 381.63,166.04C362.8,165.86 343.97,166.02 325.14,165.99C318.32,165.98 318.02,165.69 318.01,158.96C317.99,134.46 317.49,109.95 318.13,85.47C318.86,57.81 290.06,36.9 263.92,46.57C235.53,57.07 207.22,67.79 178.91,78.49C149.81,89.48 120.65,100.31 91.7,111.68C68.36,120.85 54.01,142.7 54,167.74C53.99,241.24 53.98,314.73 54.04,388.22C54.04,392.86 54.39,397.52 54.93,402.13C58.42,431.75 82.22,458.99 110.93,467.3C125.31,471.46 139.88,470.91 155.5,471M285,141.5C285,138.33 285,135.17 285,132C284.99,116.85 285.06,101.69 284.95,86.53C284.9,79.05 280.57,76.07 273.43,78.36C270.9,79.18 268.4,80.1 265.91,81.04C237.15,91.9 208.39,102.79 179.63,113.65C154.43,123.16 129.18,132.51 104.05,142.21C90.32,147.5 82.31,167.08 88.4,179.85C89.13,179.53 89.93,179.32 90.59,178.88C104.61,169.49 120.17,165.82 136.91,165.95C160.39,166.14 183.88,166 207.37,166C231.19,166 255.01,165.92 278.83,166.05C283.28,166.08 285.24,164.61 285.05,159.99C284.8,154.17 285,148.33 285,141.5M153.82,241.03C151.52,241.38 149.2,241.61 146.93,242.11C136.71,244.34 131.95,255.85 137.3,264.88C141.63,272.2 148.78,272.92 155.99,272.94C201.98,273.05 247.98,273.02 293.97,272.95C297.1,272.94 300.28,272.5 303.34,271.82C313.29,269.59 317.96,258.16 312.82,249.3C308.44,241.77 301.14,241.06 293.73,241.05C247.4,240.96 201.08,241.01 153.82,241.03","M456.4,339.95C457.6,337 459.58,334.11 459.83,331.09C460.36,324.64 460.02,318.11 459.99,311.61C459.94,303.61 455.77,299.17 447.86,299.06C437.53,298.92 427.19,298.83 416.87,299.1C409.98,299.28 403.83,301.76 399.65,307.6C394.48,314.8 393.32,322.69 397.46,330.65C401.65,338.72 408.99,342.55 417.86,342.89C427.34,343.25 436.85,343.2 446.33,342.88C449.51,342.77 452.65,341.28 456.4,339.95"] },
 };
 
 function Ico({ name, size=16, color="currentColor", style:s={} }) {
   const ic = ICONS[name];
   if (!ic) return null;
+  if (ic.paths) return (
+    <svg width={size} height={size} viewBox={ic.vb} fill={color} style={{flexShrink:0,display:"inline-block",...s}}>
+      {ic.paths.map((d,i)=><path key={i} d={d}/>)}
+    </svg>
+  );
   return <svg width={size} height={size} viewBox={ic.vb} fill={color} style={{flexShrink:0,display:"inline-block",...s}}><path d={ic.d}/></svg>;
 }
 
@@ -344,7 +350,7 @@ function printInvoice(inv, wp, sym) {
 
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ${inv.invoiceNumber||""}</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1a2f45;padding:40px}
   .page{max-width:750px;margin:0 auto;background:white;border-radius:16px;padding:48px;box-shadow:0 4px 40px rgba(0,0,0,0.08)}
   .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;padding-bottom:32px;border-bottom:2px solid #e2ecf5}
@@ -357,27 +363,27 @@ function printInvoice(inv, wp, sym) {
   .party-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#4a7fa5;margin-bottom:8px}
   .party-name{font-size:16px;font-weight:700;color:#1a2f45;margin-bottom:4px}
   .party-detail{font-size:12px;color:#6b8fa8;line-height:1.7}
-  .dates{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;background:#f0f7ff;border-radius:12px;padding:16px 20px;margin-bottom:32px}
+  .dates{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;background:#e8f4ff;border-radius:12px;padding:16px 20px;margin-bottom:32px}
   .date-item label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#4a7fa5;display:block;margin-bottom:4px}
   .date-item span{font-size:14px;font-weight:700;color:#1a2f45}
   table{width:100%;border-collapse:collapse;margin-bottom:24px}
-  thead tr{background:#0d4a6e;color:white}
-  thead th{padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px}
-  thead th:last-child, thead th:nth-last-child(2), thead th:nth-last-child(3){text-align:right}
+  thead tr{background:#0d4a6e!important}
+  thead th{padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#ffffff!important}
+  thead th:last-child,thead th:nth-last-child(2),thead th:nth-last-child(3){text-align:right}
   tbody tr{border-bottom:1px solid #e8f0f8}
-  tbody tr:nth-child(even){background:#f8fbff}
+  tbody tr:nth-child(even){background:#f8fbff!important}
   td{padding:12px 16px;font-size:13px;color:#1a2f45}
   td:nth-last-child(1),td:nth-last-child(2),td:nth-last-child(3){text-align:right}
   .totals{margin-left:auto;width:280px}
   .total-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;color:#4a7fa5;border-bottom:1px solid #e8f0f8}
-  .total-final{display:flex;justify-content:space-between;padding:14px 16px;background:#0d4a6e;border-radius:10px;margin-top:8px}
-  .total-final span:first-child{color:rgba(255,255,255,0.8);font-size:13px;font-weight:600}
-  .total-final span:last-child{color:white;font-size:18px;font-weight:900}
+  .total-final{display:flex;justify-content:space-between;padding:14px 16px;background:#0d4a6e!important;border-radius:10px;margin-top:8px;border:2px solid #0d4a6e}
+  .total-final span:first-child{color:#a8d4f5!important;font-size:13px;font-weight:600}
+  .total-final span:last-child{color:#ffffff!important;font-size:20px;font-weight:900}
   .footer{margin-top:36px;padding-top:24px;border-top:1px solid #e2ecf5;display:grid;grid-template-columns:1fr 1fr;gap:24px}
   .footer-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#4a7fa5;margin-bottom:6px}
   .footer-val{font-size:12px;color:#1a2f45;line-height:1.6}
-  .badge{display:inline-block;background:#dcfce7;color:#166534;border-radius:99px;padding:3px 12px;font-size:11px;font-weight:700;margin-bottom:16px}
-  @media print{body{background:white;padding:0}.page{box-shadow:none;border-radius:0;padding:32px}}
+  .badge{display:inline-block;background:#dcfce7!important;color:#166534!important;border-radius:99px;padding:3px 12px;font-size:11px;font-weight:700;margin-bottom:16px}
+  @media print{body{background:white;padding:0}.page{box-shadow:none;border-radius:0;padding:32px}thead tr{background:#0d4a6e!important}.total-final{background:#0d4a6e!important}}
 </style></head><body><div class="page">
   <div class="header">
     <div>
@@ -531,11 +537,11 @@ export default function App() {
   if (!user)       return <LoginScreen onGoogleLogin={login}/>;
 
   const tabs=[
-    {id:"dashboard",label:"Dashboard", icon:"chartLine",  color:"#00e5a0"},
-    {id:"income",   label:"Income",    icon:"moneyUp",    color:"#00e5a0"},
-    {id:"pending",  label:"Pending",   icon:"hourglass",  color:"#f0a500"},
-    {id:"expenses", label:"Expenses",  icon:"triangleEx", color:"#ff5c5c"},
-    {id:"plans",    label:"Plans",     icon:"bullseye",   color:"#9370db"},
+    {id:"dashboard",label:"Dashboard", icon:"chartLine",      color:"#00e5a0"},
+    {id:"income",   label:"Income",    icon:"wallet",         color:"#00e5a0"},
+    {id:"pending",  label:"Pending",   icon:"hourglass",      color:"#f0a500"},
+    {id:"expenses", label:"Expenses",  icon:"withdrawWallet", color:"#ff5c5c"},
+    {id:"plans",    label:"Plans",     icon:"bullseye",       color:"#9370db"},
   ];
   const commonProps={f,t,currency,rates};
 
@@ -767,7 +773,7 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
         <div style={{padding:"18px 24px",borderBottom:`1px solid ${t.sectionBorder}`,display:"flex",alignItems:"center",justifyContent:"space-between",borderRadius:"20px 20px 0 0"}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <Ico name="invoice" size={20} color="#00e5a0"/>
-            <div style={{fontSize:18,fontWeight:800,color:t.text}}>New Invoice</div>
+            <div style={{fontSize:18,fontWeight:800,color:t.text}}>Create Invoice</div>
           </div>
           <button onClick={onClose} style={{background:"transparent",border:`1px solid ${t.cardBorder}`,borderRadius:9,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
             <Ico name="xmark" size={14} color={t.subText}/>
@@ -775,11 +781,11 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
         </div>
 
         <div style={{padding:"20px 24px"}}>
-          {/* Invoice meta row */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:20}}>
-            <div><ILbl t={t}>Invoice #</ILbl><input style={iSt(t)} value={inv.invoiceNumber} onChange={e=>setF("invoiceNumber",e.target.value)}/></div>
-            <div><ILbl t={t}>Issue Date</ILbl><input style={iSt(t)} type="date" value={inv.issueDate} onChange={e=>setF("issueDate",e.target.value)}/></div>
-            <div><ILbl t={t}>Due Date</ILbl><input style={iSt(t)} type="date" value={inv.dueDate} onChange={e=>setF("dueDate",e.target.value)}/></div>
+          {/* Invoice meta */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+            <div style={{gridColumn:"1/-1"}}><ILbl t={t}>Invoice #</ILbl><input style={iSt(t)} value={inv.invoiceNumber} onChange={e=>setF("invoiceNumber",e.target.value)}/></div>
+            <div style={{minWidth:0}}><ILbl t={t}>Issue Date</ILbl><input style={{...iSt(t),width:"100%",boxSizing:"border-box"}} type="date" value={inv.issueDate} onChange={e=>setF("issueDate",e.target.value)}/></div>
+            <div style={{minWidth:0}}><ILbl t={t}>Due Date</ILbl><input style={{...iSt(t),width:"100%",boxSizing:"border-box"}} type="date" value={inv.dueDate} onChange={e=>setF("dueDate",e.target.value)}/></div>
           </div>
 
           {/* From (auto-filled) */}
@@ -997,11 +1003,11 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             </select>
           )}
           {summaryMode==="average"&&<div style={{fontSize:11,color:t.subText,marginBottom:12}}>Based on {monthsCount} month{monthsCount!==1?"s":""} with transactions</div>}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
             {summaryData.map(([l,v,c])=>(
-              <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"16px 12px",textAlign:"center"}}>
-                <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
-                <div style={{fontSize:16,fontWeight:800,color:c,marginTop:6}}>{f(v)}</div>
+              <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 10px",textAlign:"center",minWidth:0,overflow:"hidden"}}>
+                <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l}</div>
+                <div style={{fontSize:13,fontWeight:800,color:c,marginTop:6,wordBreak:"break-word",lineHeight:1.3}}>{f(v)}</div>
               </div>
             ))}
           </div>
@@ -1130,7 +1136,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
   const cards=[
     {label:"Total Income",    value:totalIncome,   color:"#00e5a0", icon:"coins"},
     {label:"Pending Payment", value:totalPending,  color:"#f0a500", icon:"hourglass"},
-    {label:"Total Expenses",  value:totalExpenses, color:"#ff5c5c", icon:"triangleEx"},
+    {label:"Total Expenses",  value:totalExpenses, color:"#ff5c5c", icon:"withdrawWallet"},
     {label:"Net Balance",     value:netBalance,    color:netBalance>=0?"#00e5a0":"#ff5c5c", icon:"creditCard"},
   ];
   const recentTx=[...(finance.income||[]).map(i=>({...i,type:"income"})),...(finance.expenses||[]).map(i=>({...i,type:"expense"})),...(finance.pending||[]).map(i=>({...i,type:"pending"}))].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
@@ -1174,7 +1180,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         {recentTx.map(tx=>(
           <div key={tx.id+tx.type} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:`1px solid ${t.sectionBorder}`}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <Ico name={tx.type==="income"?"coins":tx.type==="pending"?"hourglass":"triangleEx"} size={14} color={tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}/>
+              <Ico name={tx.type==="income"?"coins":tx.type==="pending"?"hourglass":"withdrawWallet"} size={14} color={tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}/>
               <div><div style={{fontSize:13,fontWeight:600,color:t.text}}>{tx.client||tx.category||"—"}</div><div style={{fontSize:11,color:t.subText}}>{tx.date}</div></div>
             </div>
             <div style={{fontWeight:800,fontSize:14,color:tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}}>{tx.type==="expense"?"−":"+"}{f(tx.amount)}</div>
@@ -1201,7 +1207,7 @@ function IncomeTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates }) {
   return (
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-        <div style={{fontSize:22,fontWeight:800,display:"flex",alignItems:"center",gap:8}}><Ico name="moneyUp" size={20} color="#00e5a0"/>Income</div>
+        <div style={{fontSize:22,fontWeight:800,display:"flex",alignItems:"center",gap:8}}><Ico name="wallet" size={20} color="#00e5a0"/>Income</div>
         <button onClick={()=>setShow(!show)} style={bSt("#00e5a0")}>+ Add Income</button>
       </div>
       <div style={{fontSize:13,color:"#00e5a0",fontWeight:700,marginBottom:18}}>Total Income: {f(total)}</div>
@@ -1306,7 +1312,7 @@ function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates })
   return (
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-        <div style={{fontSize:22,fontWeight:800,display:"flex",alignItems:"center",gap:8}}><Ico name="triangleEx" size={20} color="#ff5c5c"/>Expenses</div>
+        <div style={{fontSize:22,fontWeight:800,display:"flex",alignItems:"center",gap:8}}><Ico name="withdrawWallet" size={20} color="#ff5c5c"/>Expenses</div>
         <button onClick={()=>setShow(!show)} style={bSt("#ff5c5c")}>+ Add Expense</button>
       </div>
       {show&&<FormCard color="#ff5c5c" t={t}>
