@@ -784,8 +784,8 @@ function InvoiceModal({ workProfile, currency, rates, t, onClose, onSetWorkProfi
             To generate professional invoices, add your business name, email, and contact details in your Work Profile.
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-            <button onClick={onSetWorkProfile} style={{...bSt("#00e5a0"),padding:"12px 24px",fontSize:14}}>
-              <Ico name="circleUser" size={14} color="#00e5a0" style={{marginRight:8,verticalAlign:"middle"}}/>Go to Work Profile
+            <button onClick={onSetWorkProfile} style={{...bSt("#00e5a0"),padding:"12px 20px",fontSize:14,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:8}}>
+              <Ico name="circleUser" size={14} color="#00e5a0"/>Work Profile
             </button>
             <button onClick={onClose} style={{...bSt("#4a7fa5"),padding:"12px 20px",fontSize:14}}>Cancel</button>
           </div>
@@ -1295,9 +1295,11 @@ const CAT_COLORS = ["#00e5a0","#4d96ff","#f0a500","#ff5c5c","#c084fc","#fbbf24",
 function ChartsSection({ finance, f, t }) {
   const isMobile = useIsMobile();
   const [activeIdx, setActiveIdx] = useState(0);
-  const touchStartX = useRef(null);
-  const mouseStartX = useRef(null);
-  const isDragging  = useRef(false);
+  const touchStartX  = useRef(null);
+  const mouseStartX  = useRef(null);
+  const isDragging   = useRef(false);
+  const wheelCooldown = useRef(false);
+  const carouselRef  = useRef(null);
 
   // Build last-6-months data
   const monthKeys = [];
@@ -1323,41 +1325,49 @@ function ChartsSection({ finance, f, t }) {
   const hasAnyData = finance.income.length > 0 || finance.expenses.length > 0;
   if (!hasAnyData) return null;
 
-  // ── CHANGE 4: Fixed touch handlers — separate onMouseLeave so it only
-  //    cancels the drag without firing a swipe (prevents ghost swipes on desktop).
+  // ── Touch handlers (mobile) ──
   const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
   const onTouchEnd   = (e) => {
     if (touchStartX.current === null) return;
     const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 40) {
-      setActiveIdx(i => diff > 0 ? Math.min(2, i + 1) : Math.max(0, i - 1));
-    }
+    if (Math.abs(diff) > 40) setActiveIdx(i => diff > 0 ? Math.min(2, i+1) : Math.max(0, i-1));
     touchStartX.current = null;
   };
-  const onMouseDown  = (e) => {
-    mouseStartX.current = e.clientX;
-    isDragging.current  = true;
-  };
+
+  // ── Mouse drag handlers (desktop click-drag) ──
+  const onMouseDown  = (e) => { mouseStartX.current = e.clientX; isDragging.current = true; };
   const onMouseUp    = (e) => {
     if (!isDragging.current || mouseStartX.current === null) return;
     const diff = mouseStartX.current - e.clientX;
-    if (Math.abs(diff) > 40) {
-      setActiveIdx(i => diff > 0 ? Math.min(2, i + 1) : Math.max(0, i - 1));
-    }
-    mouseStartX.current = null;
-    isDragging.current  = false;
+    if (Math.abs(diff) > 40) setActiveIdx(i => diff > 0 ? Math.min(2, i+1) : Math.max(0, i-1));
+    mouseStartX.current = null; isDragging.current = false;
   };
-  // Only cancel — do NOT trigger a swipe when the cursor leaves mid-drag
-  const onMouseLeave = () => {
-    mouseStartX.current = null;
-    isDragging.current  = false;
-  };
+  const onMouseLeave = () => { mouseStartX.current = null; isDragging.current = false; };
+
+  // ── Trackpad two-finger horizontal swipe (wheel event, passive:false required) ──
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const handler = (e) => {
+      // Ignore if vertical scroll dominates
+      if (Math.abs(e.deltaX) < Math.abs(e.deltaY) * 0.6) return;
+      if (Math.abs(e.deltaX) < 15) return;
+      e.preventDefault(); // stop page scroll while swiping carousel
+      if (wheelCooldown.current) return;
+      wheelCooldown.current = true;
+      setTimeout(() => { wheelCooldown.current = false; }, 550);
+      setActiveIdx(i => e.deltaX > 0 ? Math.min(2, i+1) : Math.max(0, i-1));
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, []);
 
   const legendDot = { display:"flex", alignItems:"center", gap:6, fontSize:11 };
-  const donutSize = isMobile ? 88 : 108;
 
-  // ── CHANGE 2 (cont.): cardBase gets a consistent minHeight so all three
-  //    cards share the same visual footprint as the Income Trend card.
+  // Donut is larger on desktop so the card fills the same vertical space as chart cards
+  const donutSize = isMobile ? 88 : 160;
+
+  // All three cards share identical base styles
   const cardBase = {
     background: t.sectionBg,
     border: `1px solid ${t.sectionBorder}`,
@@ -1365,25 +1375,26 @@ function ChartsSection({ finance, f, t }) {
     padding: "16px 16px 14px",
     boxSizing: "border-box",
     width: "100%",
-    minHeight: 220,
+    display: "flex",
+    flexDirection: "column",
   };
 
-  // ── CHANGE 3: New card order — Spending by Category → Income Trend → Monthly Bar ──
+  // Chart wrapper: grows to fill remaining card height, never clips
+  const chartWrap = { flex: 1, minHeight: 0 };
+
   const cards = [
-    // ── Card 0: Spending by Category (donut LEFT, list RIGHT) ──
+    // ── Card 0: Spending by Category ──
     <div style={cardBase}>
       <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:12}}>Spending by Category</div>
       {donutSlices.length > 0 ? (
-        <div style={{display:"flex",gap:14,alignItems:"center"}}>
-          {/* Donut left */}
+        <div style={{flex:1,display:"flex",gap:isMobile?12:20,alignItems:"center"}}>
           <SVGDonut slices={donutSlices} t={t} size={donutSize}/>
-          {/* Category list right */}
-          <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:isMobile?5:6}}>
+          <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:isMobile?5:7}}>
             {donutSlices.map((s) => (
               <div key={s.cat} style={{display:"flex",alignItems:"center",gap:6}}>
-                <span style={{width:7,height:7,borderRadius:2,background:s.color,flexShrink:0,display:"inline-block"}}/>
-                <span style={{color:t.subText,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:isMobile?10:11}}>{s.cat}</span>
-                <span style={{color:t.text,fontWeight:700,flexShrink:0,fontSize:isMobile?10:11}}>{Math.round(s.pct*100)}%</span>
+                <span style={{width:8,height:8,borderRadius:2,background:s.color,flexShrink:0,display:"inline-block"}}/>
+                <span style={{color:t.subText,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:isMobile?10:12}}>{s.cat}</span>
+                <span style={{color:t.text,fontWeight:700,flexShrink:0,fontSize:isMobile?10:12}}>{Math.round(s.pct*100)}%</span>
               </div>
             ))}
           </div>
@@ -1400,7 +1411,7 @@ function ChartsSection({ finance, f, t }) {
         <div style={legendDot}><span style={{width:18,height:2,background:"#00e5a0",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
         <div style={legendDot}><span style={{width:18,height:2,background:"#ff5c5c",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
       </div>
-      <SVGTrendLine data={monthlyData} t={t}/>
+      <div style={chartWrap}><SVGTrendLine data={monthlyData} t={t}/></div>
     </div>,
 
     // ── Card 2: Monthly Income vs Expenses ──
@@ -1410,14 +1421,15 @@ function ChartsSection({ finance, f, t }) {
         <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#00e5a0",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
         <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#ff5c5c",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
       </div>
-      <SVGBarChart data={monthlyData} t={t}/>
+      <div style={chartWrap}><SVGBarChart data={monthlyData} t={t}/></div>
     </div>,
   ];
 
   return (
     <div style={{marginBottom:16}}>
-      {/* Swipeable container */}
+      {/* Swipeable container — ref used for passive:false wheel listener */}
       <div
+        ref={carouselRef}
         style={{overflow:"hidden",cursor:"grab",userSelect:"none",WebkitUserSelect:"none"}}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
