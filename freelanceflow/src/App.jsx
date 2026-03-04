@@ -944,12 +944,25 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
 
   // ── Dynamic grid for summary: mobile is tighter so needs fewer cols ──
   const maxAmtLen = Math.max(...summaryData.map(([,v])=>f(v).length));
-  // On mobile: 3-col only for very short (≤8), 2-col for medium (≤14), 1-col for long
-  // On desktop: 3-col for short (≤13), 2-col for medium (≤18), 1-col for long
+  // Mobile: 3-col only for very short (≤6 chars like "$500"), 2-col up to 14, else 1-col
+  // Desktop: 3-col up to 13 chars, 2-col up to 18, else 1-col
   const summaryCols = isMobile
-    ? (maxAmtLen > 14 ? "1fr" : maxAmtLen > 8 ? "1fr 1fr" : "1fr 1fr 1fr")
+    ? (maxAmtLen > 14 ? "1fr" : maxAmtLen > 6 ? "1fr 1fr" : "1fr 1fr 1fr")
     : (maxAmtLen > 18 ? "1fr" : maxAmtLen > 13 ? "1fr 1fr" : "1fr 1fr 1fr");
   const summaryTextAlign = summaryCols === "1fr 1fr 1fr" ? "center" : "left";
+  // Font size depends on both length AND how many cols (narrower cols need smaller font)
+  const colCount = summaryCols === "1fr 1fr 1fr" ? 3 : summaryCols === "1fr 1fr" ? 2 : 1;
+  function summaryFs(str) {
+    const l = (str||"").length;
+    if (colCount === 3) {
+      // 3-col: very tight on mobile — only used for short numbers
+      if (l > 8) return 14; if (l > 6) return 16; return 19;
+    } else if (colCount === 2) {
+      if (l > 16) return 13; if (l > 12) return 15; if (l > 9) return 17; return 20;
+    } else {
+      if (l > 20) return 14; if (l > 16) return 16; if (l > 12) return 18; return 22;
+    }
+  }
 
   const wpFields=[
     {k:"workName",label:"Business / Full Name",placeholder:"e.g. Shakil Ahmed Designs"},
@@ -1043,17 +1056,18 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           <div style={{display:"grid",gridTemplateColumns:summaryCols,gap:10}}>
             {summaryData.map(([l,v,c])=>{
               const fmtStr = f(v);
-              const fs = fmtStr.length > 20 ? 13 : fmtStr.length > 17 ? 15 : fmtStr.length > 13 ? 17 : 19;
+              const fs = summaryFs(fmtStr);
               return (
-                <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 16px",textAlign:summaryTextAlign,minWidth:0}}>
-                  <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
+                <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 12px",textAlign:summaryTextAlign,minWidth:0,overflow:"hidden"}}>
+                  <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8,lineHeight:1.4}}>{l}</div>
                   <div style={{
                     fontSize:fs,
                     fontWeight:800,
                     color:c,
                     marginTop:6,
-                    wordBreak:"break-word",
-                    overflowWrap:"anywhere",
+                    whiteSpace:"nowrap",
+                    overflow:"hidden",
+                    textOverflow:"ellipsis",
                     lineHeight:1.3,
                   }}>{fmtStr}</div>
                 </div>
