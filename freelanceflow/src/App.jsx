@@ -485,6 +485,12 @@ export default function App() {
   const [invoiceOpen,  setInvoiceOpen]  = useState(false);
   const [installPrompt,setInstallPrompt]= useState(null);
 
+  // ── FIX: Only allow saving AFTER cloud data has been loaded.
+  // Without this guard, the save effect fires on first render with empty
+  // default state (before Firebase responds) and wipes your cloud data —
+  // which is exactly what happened when reopening a stale browser session.
+  const dataLoaded = useRef(false);
+
   const isMobile = useIsMobile();
   const t        = THEMES[settings.theme]||THEMES.dark;
   const currency = settings.currency||"BDT";
@@ -516,6 +522,9 @@ export default function App() {
         setSettings(cloud.settings);
         setProfile(cloud.profile);
         setWorkProfile(cloud.workProfile);
+        dataLoaded.current = true; // ✅ safe to save from this point on
+      } else {
+        dataLoaded.current = false; // reset on sign-out
       }
       setAuthLoading(false);
     });
@@ -523,6 +532,7 @@ export default function App() {
   },[]);
 
   useEffect(()=>{
+    if (!dataLoaded.current) return; // ✅ don't save before cloud data is loaded
     if(!user) return;
     const timer=setTimeout(()=>saveToCloud(user.uid,finance,settings,profile,workProfile),800);
     return()=>clearTimeout(timer);
@@ -535,7 +545,7 @@ export default function App() {
   },[]);
 
   const login  = ()=>signInWithPopup(auth,provider);
-  const logout = ()=>{ signOut(auth); setFinance(defaultFinance); setProfile({customName:""}); setWorkProfile({...defaultWorkProfile}); setSettings({currency:"BDT",theme:"dark"}); setTab("dashboard"); setPage("main"); };
+  const logout = ()=>{ dataLoaded.current = false; signOut(auth); setFinance(defaultFinance); setProfile({customName:""}); setWorkProfile({...defaultWorkProfile}); setSettings({currency:"BDT",theme:"dark"}); setTab("dashboard"); setPage("main"); };
   const setSetting = (key,val)=>setSettings(s=>({...s,[key]:val}));
 
   const addItem       = (type,item)      => setFinance(d=>({...d,[type]:[item,...d[type]]}));
@@ -1894,5 +1904,3 @@ function Pills({label,values,active,setActive,color,pretty,t}){
 }
 const iSt=t=>({width:"100%",background:t.inputBg,border:`1px solid ${t.inputBorder}`,borderRadius:9,color:t.inputText||t.text,padding:"10px 12px",fontSize:14,boxSizing:"border-box",outline:"none"});
 function bSt(color){return {background:`${color}18`,border:`1px solid ${color}60`,color,borderRadius:9,padding:"8px 18px",cursor:"pointer",fontSize:13,fontWeight:700,transition:"all 0.2s"};}
-
-
