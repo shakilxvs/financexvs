@@ -189,10 +189,16 @@ async function loadFromCloud(uid) {
         settings:    { currency:"BDT", theme:"dark", ...(d.settings||{}) },
         profile:     { customName:"",          ...(d.profile||{}) },
         workProfile: { ...defaultWorkProfile,  ...(d.workProfile||{}) },
+        loaded: true,
       };
     }
-  } catch {}
-  return { finance:defaultFinance, settings:{currency:"BDT",theme:"dark"}, profile:{customName:""}, workProfile:{...defaultWorkProfile} };
+    // New user — no doc yet, safe to save empty state
+    return { finance:defaultFinance, settings:{currency:"BDT",theme:"dark"}, profile:{customName:""}, workProfile:{...defaultWorkProfile}, loaded: true };
+  } catch(e) {
+    console.error("loadFromCloud failed:", e);
+    // Network/Firestore error — block saving so we don't wipe cloud data
+    return { loaded: false };
+  }
 }
 async function saveToCloud(uid, finance, settings, profile, workProfile) {
   try { await setDoc(doc(db,"users",uid),{finance,settings,profile,workProfile},{merge:true}); }
@@ -485,7 +491,7 @@ export default function App() {
   const [invoiceOpen,  setInvoiceOpen]  = useState(false);
   const [installPrompt,setInstallPrompt]= useState(null);
 
-  const dataLoaded = useRef(false); // guard: only save after cloud data is loaded
+  const dataLoaded = useRef(false);
 
   const isMobile = useIsMobile();
   const t        = THEMES[settings.theme]||THEMES.dark;
@@ -512,16 +518,21 @@ export default function App() {
   useEffect(()=>{
     const unsub=onAuthStateChanged(auth,async u=>{
       if(u){
-        // Load cloud data FIRST, then reveal the app — prevents blank flash
         const cloud=await loadFromCloud(u.uid);
-        setFinance(cloud.finance);
-        setSettings(cloud.settings);
-        setProfile(cloud.profile);
-        setWorkProfile(cloud.workProfile);
-        dataLoaded.current = true;
-        setUser(u); // set user last so app only renders once data is ready
+        if(cloud.loaded){
+          setFinance(cloud.finance);
+          setSettings(cloud.settings);
+          setProfile(cloud.profile);
+          setWorkProfile(cloud.workProfile);
+          dataLoaded.current = true;
+          setUser(u); // set user LAST — app only renders once data is ready
+        } else {
+          // Firestore unreachable — show app but block saving to protect data
+          dataLoaded.current = false;
+          setUser(u);
+        }
       } else {
-        // Reset everything in one place on sign-out — no blank flash
+        // Signed out — reset everything cleanly
         setUser(null);
         setFinance(defaultFinance);
         setProfile({customName:""});
@@ -537,7 +548,7 @@ export default function App() {
   },[]);
 
   useEffect(()=>{
-    if (!dataLoaded.current) return; // don't save before cloud data is loaded
+    if(!dataLoaded.current) return;
     if(!user) return;
     const timer=setTimeout(()=>saveToCloud(user.uid,finance,settings,profile,workProfile),800);
     return()=>clearTimeout(timer);
