@@ -79,7 +79,6 @@ const ICONS = {
   download:   { vb:"0 0 512 512", d:"M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z" },
   mobile:     { vb:"0 0 384 512", d:"M16 64C16 28.7 44.7 0 80 0H304c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H80c-35.3 0-64-28.7-64-64V64zM224 448a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM304 64H80V384H304V64z" },
   plus:       { vb:"0 0 448 512", d:"M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z" },
-  wifiOff:    { vb:"0 0 24 24", d:"M2.28 3L1 4.27l2.47 2.46C2.01 7.88.97 9.06.07 10.34L2 12.28C3.04 10.8 4.3 9.5 5.74 8.45l1.57 1.57C5.96 10.96 4.87 12.1 4 13.45L6 15.44C6.87 14.16 8 13.06 9.31 12.23l1.59 1.59C9.65 14.57 8.7 15.74 8 17.08L10 19.06C10.78 17.61 11.78 16.35 13 15.38l1.57 1.57C13.19 17.65 12.47 18.77 12 20l2 2 2-2c-.56-1.43-1.4-2.7-2.43-3.79l1.59-1.59C16.6 16.01 17.9 17.36 19 18.91L21 16.9c-1.26-1.77-2.85-3.29-4.67-4.5l1.58-1.58C19.96 12.22 21.64 13.84 23 15.72l1.93-1.94C23.29 12 21.41 10.43 19.28 9.26L21 7.54 19.73 6.27 2.28 3M12 2L8.91 5.09l1.64 1.64L12 5.2l4 3.2 2-2.55L12 2z" },
   xmark:      { vb:"0 0 384 512", d:"M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" },
   withdrawWallet: { vb:"0 0 512 512", paths:["M155.5,471C229.66,471 303.82,471.03 377.97,470.97C389.03,470.96 399.77,468.98 410.09,464.83C442.14,451.94 463.1,418 459.85,383.72C459.21,377.02 456.26,370.87 449.98,367.87C445.48,365.73 440.26,364.51 435.27,364.15C424.38,363.37 413.33,365.11 402.67,361.08C382.78,353.54 372.25,336.86 373.24,318.57C374.5,295.41 393.86,278.04 417.07,278C424.07,277.99 431.08,278.13 438.07,277.94C449.76,277.62 458.99,269.59 459.85,258.59C462.12,229.56 454.37,204.29 431.44,184.92C417.06,172.78 400.5,166.21 381.63,166.04C362.8,165.86 343.97,166.02 325.14,165.99C318.32,165.98 318.02,165.69 318.01,158.96C317.99,134.46 317.49,109.95 318.13,85.47C318.86,57.81 290.06,36.9 263.92,46.57C235.53,57.07 207.22,67.79 178.91,78.49C149.81,89.48 120.65,100.31 91.7,111.68C68.36,120.85 54.01,142.7 54,167.74C53.99,241.24 53.98,314.73 54.04,388.22C54.04,392.86 54.39,397.52 54.93,402.13C58.42,431.75 82.22,458.99 110.93,467.3C125.31,471.46 139.88,470.91 155.5,471M285,141.5C285,138.33 285,135.17 285,132C284.99,116.85 285.06,101.69 284.95,86.53C284.9,79.05 280.57,76.07 273.43,78.36C270.9,79.18 268.4,80.1 265.91,81.04C237.15,91.9 208.39,102.79 179.63,113.65C154.43,123.16 129.18,132.51 104.05,142.21C90.32,147.5 82.31,167.08 88.4,179.85C89.13,179.53 89.93,179.32 90.59,178.88C104.61,169.49 120.17,165.82 136.91,165.95C160.39,166.14 183.88,166 207.37,166C231.19,166 255.01,165.92 278.83,166.05C283.28,166.08 285.24,164.61 285.05,159.99C284.8,154.17 285,148.33 285,141.5M153.82,241.03C151.52,241.38 149.2,241.61 146.93,242.11C136.71,244.34 131.95,255.85 137.3,264.88C141.63,272.2 148.78,272.92 155.99,272.94C201.98,273.05 247.98,273.02 293.97,272.95C297.1,272.94 300.28,272.5 303.34,271.82C313.29,269.59 317.96,258.16 312.82,249.3C308.44,241.77 301.14,241.06 293.73,241.05C247.4,240.96 201.08,241.01 153.82,241.03","M456.4,339.95C457.6,337 459.58,334.11 459.83,331.09C460.36,324.64 460.02,318.11 459.99,311.61C459.94,303.61 455.77,299.17 447.86,299.06C437.53,298.92 427.19,298.83 416.87,299.1C409.98,299.28 403.83,301.76 399.65,307.6C394.48,314.8 393.32,322.69 397.46,330.65C401.65,338.72 408.99,342.55 417.86,342.89C427.34,343.25 436.85,343.2 446.33,342.88C449.51,342.77 452.65,341.28 456.4,339.95"] },
 };
@@ -100,7 +99,7 @@ function Ico({ name, size=16, color="currentColor", style:s={} }) {
 // ── Themes ────────────────────────────────────────────────────
 const THEMES = {
   dark: {
-    id:"dark", pageBg:"#0d1117", headerBg:"rgba(13,33,55,0.9)", headerBorder:"rgba(30,58,95,0.8)",
+    id:"dark", pageBg:"#0d1117", headerBg:"rgba(13,33,55,0.72)", headerBorder:"rgba(30,58,95,0.8)",
     sectionBg:"rgba(255,255,255,0.03)", sectionBorder:"#1e3a5f",
     cardBg:"rgba(255,255,255,0.02)", cardBorder:"#1e3a5f",
     inputBg:"#0a1628", inputBorder:"#1e3a5f", inputText:"#e6edf3",
@@ -110,7 +109,7 @@ const THEMES = {
     tabActive:"rgba(0,229,160,0.18)", tabActiveBorder:"rgba(0,229,160,0.5)", tabActiveText:"#00e5a0",
   },
   light: {
-    id:"light", pageBg:"#eef2f7", headerBg:"rgba(255,255,255,0.92)", headerBorder:"rgba(180,210,240,0.9)",
+    id:"light", pageBg:"#eef2f7", headerBg:"rgba(255,255,255,0.72)", headerBorder:"rgba(180,210,240,0.9)",
     sectionBg:"rgba(255,255,255,0.9)", sectionBorder:"#c5d8ee",
     cardBg:"rgba(255,255,255,0.95)", cardBorder:"#c5d8ee",
     inputBg:"#ffffff", inputBorder:"#b0c8e0", inputText:"#1a2f45",
@@ -340,7 +339,7 @@ function HamburgerMenu({ onLogout, onProfile, onSettings, t }) {
 
 
 // ── Currency Dropdown ─────────────────────────────────────────
-function CurrencyDropdown({ currency, setCurrency, rates, ratesLoading, compact=false }) {
+function CurrencyDropdown({ currency, setCurrency, rates, ratesLoading }) {
   const [open,setOpen]=useState(false);
   const ref=useRef(null);
   useEffect(()=>{
@@ -349,9 +348,9 @@ function CurrencyDropdown({ currency, setCurrency, rates, ratesLoading, compact=
   },[]);
   return (
     <div ref={ref} style={{position:"relative"}}>
-      <button onClick={()=>setOpen(!open)} style={{display:"flex",alignItems:"center",gap:compact?3:5,background:"rgba(0,229,160,0.1)",border:"1px solid rgba(0,229,160,0.35)",borderRadius:compact?10:8,padding:compact?"5px 10px":"5px 10px",cursor:"pointer",color:"#00e5a0",fontSize:12,fontWeight:700}}>
-        <span style={{fontSize:compact?12:14}}>{currSym(currency)}</span>
-        {!compact&&<span>{currency}</span>}
+      <button onClick={()=>setOpen(!open)} style={{display:"flex",alignItems:"center",gap:5,background:"rgba(0,229,160,0.1)",border:"1px solid rgba(0,229,160,0.35)",borderRadius:8,padding:"5px 10px",cursor:"pointer",color:"#00e5a0",fontSize:12,fontWeight:800}}>
+        <span style={{fontSize:14}}>{currSym(currency)}</span>
+        <span>{currency}</span>
         <span style={{fontSize:9,opacity:0.6}}>{open?"▲":"▼"}</span>
       </button>
       {open && (
@@ -674,8 +673,8 @@ export default function App() {
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <Ico name="wallet" size={18} color="#00e5a0"/>
                   <span style={{fontSize:16,fontWeight:800,color:"#00e5a0",letterSpacing:"-0.5px"}}>Finance Flow</span>
-                  {isOffline&&<Ico name="wifiOff" size={18} color="#ffa500"/>}
-                  <CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading} compact={true}/>
+                  {isOffline&&<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffa500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="No internet"><line x1="2" y1="2" x2="22" y2="22"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.5a9 9 0 0 1 5.5-2.5"/><path d="M19 12.5a9 9 0 0 0-2.5-1.5"/><path d="M10.5 20a1.5 1.5 0 0 1 3 0"/><path d="M2 8.5A13 13 0 0 1 12 5c1.7 0 3.4.3 4.9.9"/></svg>}
+                  <div style={{transform:"scale(0.88)",transformOrigin:"left center"}}><CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading}/></div>
                 </div>
                 <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} t={t}/>
               </div>
@@ -693,7 +692,7 @@ export default function App() {
                 <Ico name="wallet" size={20} color="#00e5a0"/>
                 <div>
                   <div style={{fontSize:16,fontWeight:800,color:"#00e5a0",letterSpacing:"-0.5px",lineHeight:1.2}}>Finance Flow</div>
-                  <div style={{fontSize:10,color:t.subText,display:"flex",alignItems:"center",gap:4}}>{isOffline?<><Ico name="wifiOff" size={12} color="#ffa500"/><span style={{color:"#ffa500"}}>Offline</span></>:"Personal finance manager"}</div>
+                  <div style={{fontSize:10,color:t.subText,display:"flex",alignItems:"center",gap:4}}>{isOffline?<><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#ffa500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.5a9 9 0 0 1 5.5-2.5"/><path d="M19 12.5a9 9 0 0 0-2.5-1.5"/><path d="M10.5 20a1.5 1.5 0 0 1 3 0"/><path d="M2 8.5A13 13 0 0 1 12 5c1.7 0 3.4.3 4.9.9"/></svg><span style={{color:"#ffa500"}}>Offline</span></>:"Personal finance manager"}</div>
                 </div>
                 <CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading}/>
               </div>
