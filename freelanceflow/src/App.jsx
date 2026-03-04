@@ -179,6 +179,35 @@ function cardFlex(formattedValue) {
 
 
 // ── Firebase ──────────────────────────────────────────────────
+// ── Local cache helpers ──────────────────────────────────────
+const CACHE_KEY = uid => `ff_cache_${uid}`;
+
+function saveToLocal(uid, finance, settings, profile, workProfile) {
+  try {
+    localStorage.setItem(CACHE_KEY(uid), JSON.stringify({ finance, settings, profile, workProfile, cachedAt: Date.now() }));
+  } catch(e) { console.warn("Local save failed:", e); }
+}
+
+function loadFromLocal(uid) {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY(uid));
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    return {
+      finance:     { ...defaultFinance,     ...(d.finance||{}) },
+      settings:    { currency:"BDT", theme:"dark", ...(d.settings||{}) },
+      profile:     { customName:"",          ...(d.profile||{}) },
+      workProfile: { ...defaultWorkProfile,  ...(d.workProfile||{}) },
+      loaded: true,
+      fromCache: true,
+    };
+  } catch { return null; }
+}
+
+function clearLocal(uid) {
+  try { localStorage.removeItem(CACHE_KEY(uid)); } catch {}
+}
+
 async function loadFromCloud(uid) {
   try {
     const snap = await getDoc(doc(db,"users",uid));
@@ -190,19 +219,30 @@ async function loadFromCloud(uid) {
         profile:     { customName:"",          ...(d.profile||{}) },
         workProfile: { ...defaultWorkProfile,  ...(d.workProfile||{}) },
         loaded: true,
+        fromCache: false,
       };
     }
-    // New user — no doc yet, safe to save empty state
-    return { finance:defaultFinance, settings:{currency:"BDT",theme:"dark"}, profile:{customName:""}, workProfile:{...defaultWorkProfile}, loaded: true };
+    // New user — no doc yet
+    return { finance:defaultFinance, settings:{currency:"BDT",theme:"dark"}, profile:{customName:""}, workProfile:{...defaultWorkProfile}, loaded: true, fromCache: false };
   } catch(e) {
-    console.error("loadFromCloud failed:", e);
-    // Network/Firestore error — block saving so we don't wipe cloud data
-    return { loaded: false };
+    console.warn("Firestore unreachable, trying local cache:", e);
+    // Offline or error — fall back to localStorage
+    const local = loadFromLocal(uid);
+    if (local) return local;
+    // No cache either — safe empty state for new users
+    return { finance:defaultFinance, settings:{currency:"BDT",theme:"dark"}, profile:{customName:""}, workProfile:{...defaultWorkProfile}, loaded: false, fromCache: false };
   }
 }
+
 async function saveToCloud(uid, finance, settings, profile, workProfile) {
-  try { await setDoc(doc(db,"users",uid),{finance,settings,profile,workProfile},{merge:true}); }
-  catch(e) { console.error("Save error:",e); }
+  // Always save locally first (instant, works offline)
+  saveToLocal(uid, finance, settings, profile, workProfile);
+  // Then attempt cloud save
+  try {
+    await setDoc(doc(db,"users",uid),{finance,settings,profile,workProfile},{merge:true});
+  } catch(e) {
+    console.warn("Cloud save failed (offline?), data cached locally:", e);
+  }
 }
 
 
@@ -490,6 +530,7 @@ export default function App() {
   const [confirm,      setConfirm]      = useState(null);
   const [invoiceOpen,  setInvoiceOpen]  = useState(false);
   const [installPrompt,setInstallPrompt]= useState(null);
+  const [isOffline,    setIsOffline]    = useState(!navigator.onLine);
 
   const dataLoaded = useRef(false);
 
@@ -525,14 +566,11 @@ export default function App() {
           setProfile(cloud.profile);
           setWorkProfile(cloud.workProfile);
           dataLoaded.current = true;
-          setUser(u); // set user LAST — app only renders once data is ready
         } else {
-          // Firestore unreachable — show app but block saving to protect data
-          dataLoaded.current = false;
-          setUser(u);
+          dataLoaded.current = false; // Firestore unreachable & no cache
         }
+        setUser(u); // set user LAST — renders only once data is ready
       } else {
-        // Signed out — reset everything cleanly
         setUser(null);
         setFinance(defaultFinance);
         setProfile({customName:""});
@@ -546,6 +584,25 @@ export default function App() {
     });
     return unsub;
   },[]);
+
+  // ── Online/offline detection + auto-sync when reconnected ──
+  useEffect(()=>{
+    const handleOnline  = ()=>{ setIsOffline(false); };
+    const handleOffline = ()=>{ setIsOffline(true);  };
+    window.addEventListener("online",  handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return()=>{
+      window.removeEventListener("online",  handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  },[]);
+
+  // When reconnected, immediately push local cache to Firestore
+  useEffect(()=>{
+    if(!isOffline && user && dataLoaded.current){
+      saveToCloud(user.uid, finance, settings, profile, workProfile);
+    }
+  },[isOffline]);
 
   useEffect(()=>{
     if(!dataLoaded.current) return;
@@ -561,7 +618,7 @@ export default function App() {
   },[]);
 
   const login  = ()=>signInWithPopup(auth,provider);
-  const logout = ()=>{ dataLoaded.current = false; signOut(auth); };
+  const logout = ()=>{ if(user) clearLocal(user.uid); dataLoaded.current = false; signOut(auth); };
   const setSetting = (key,val)=>setSettings(s=>({...s,[key]:val}));
 
   const addItem       = (type,item)      => setFinance(d=>({...d,[type]:[item,...d[type]]}));
@@ -616,6 +673,7 @@ export default function App() {
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <Ico name="wallet" size={18} color="#00e5a0"/>
                   <span style={{fontSize:16,fontWeight:800,color:"#00e5a0",letterSpacing:"-0.5px"}}>Finance Flow</span>
+                  {isOffline&&<span style={{background:"rgba(255,165,0,0.15)",border:"1px solid rgba(255,165,0,0.5)",borderRadius:99,padding:"2px 8px",fontSize:10,fontWeight:700,color:"#ffa500"}}>● Offline</span>}
                   <CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading}/>
                 </div>
                 <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} t={t}/>
@@ -634,7 +692,7 @@ export default function App() {
                 <Ico name="wallet" size={20} color="#00e5a0"/>
                 <div>
                   <div style={{fontSize:16,fontWeight:800,color:"#00e5a0",letterSpacing:"-0.5px",lineHeight:1.2}}>Finance Flow</div>
-                  <div style={{fontSize:10,color:t.subText}}>Personal finance manager</div>
+                  <div style={{fontSize:10,color:t.subText}}>{isOffline ? "⚠️ Offline — data saved locally" : "Personal finance manager"}</div>
                 </div>
                 <CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading}/>
               </div>
