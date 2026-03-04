@@ -595,7 +595,7 @@ export default function App() {
                 <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} t={t}/>
               </div>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <div style={{background:"rgba(0,229,160,0.1)",border:"1px solid rgba(0,229,160,0.3)",borderRadius:10,padding:"5px 11px",fontSize:12,fontWeight:700,color:"#00e5a0"}}>Net: {f(netBalance)}</div>
+                <div style={{background:netBalance<0?"rgba(255,92,92,0.1)":"rgba(0,229,160,0.1)",border:`1px solid ${netBalance<0?"rgba(255,92,92,0.3)":"rgba(0,229,160,0.3)"}`,borderRadius:10,padding:"5px 11px",fontSize:12,fontWeight:700,color:netBalance<0?"#ff5c5c":"#00e5a0"}}>Net: {f(netBalance)}</div>
                 <div style={{display:"flex",alignItems:"center",gap:7}}>
                   <span style={{fontSize:12,color:t.dimText}}>{fname}</span>
                   <UserAvatar photoURL={user.photoURL} size={28}/>
@@ -613,7 +613,7 @@ export default function App() {
                 <CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading}/>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <div style={{background:"rgba(0,229,160,0.1)",border:"1px solid rgba(0,229,160,0.3)",borderRadius:10,padding:"6px 12px",fontSize:13,fontWeight:700,color:"#00e5a0",whiteSpace:"nowrap"}}>Net: {f(netBalance)}</div>
+                <div style={{background:netBalance<0?"rgba(255,92,92,0.1)":"rgba(0,229,160,0.1)",border:`1px solid ${netBalance<0?"rgba(255,92,92,0.3)":"rgba(0,229,160,0.3)"}`,borderRadius:10,padding:"6px 12px",fontSize:13,fontWeight:700,color:netBalance<0?"#ff5c5c":"#00e5a0",whiteSpace:"nowrap"}}>Net: {f(netBalance)}</div>
                 <UserAvatar photoURL={user.photoURL} size={30}/>
                 <span style={{fontSize:12,color:t.dimText,maxWidth:72,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fname}</span>
                 <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} t={t}/>
@@ -1018,6 +1018,16 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           </div>
           <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total earned: <span style={{color:curLvl.color,fontWeight:700}}>${totalIncomeUSD.toLocaleString("en-US",{maximumFractionDigits:0})}</span></div>
         </div>
+
+        {totalSavings < 0 && (
+          <div style={{background:"rgba(255,92,92,0.08)",border:"1px solid rgba(255,92,92,0.35)",borderRadius:20,padding:20,marginBottom:14,display:"flex",alignItems:"center",gap:14}}>
+            <span style={{fontSize:36,flexShrink:0}}>😵</span>
+            <div>
+              <div style={{fontSize:18,fontWeight:800,color:"#ff5c5c"}}>Broke Soldier</div>
+              <div style={{fontSize:12,color:t.subText,marginTop:2}}>You're spending more than you earn. Time to turn it around.</div>
+            </div>
+          </div>
+        )}
 
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:24,marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,gap:8}}>
