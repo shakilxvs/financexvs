@@ -56,6 +56,8 @@ const ICONS = {
   gear:       { vb:"0 0 512 512", d:"M495.9 166.6c3.2 8.7 .5 18.4-6.4 24.6l-43.3 39.4c1.1 8.3 1.7 16.8 1.7 25.4s-.6 17.1-1.7 25.4l43.3 39.4c6.9 6.2 9.6 15.9 6.4 24.6c-4.4 11.9-9.7 23.3-15.8 34.3l-4.7 8.1c-6.6 11-14 21.4-22.1 31.2c-5.9 7.2-15.7 9.6-24.5 6.8l-55.7-17.7c-13.4 10.3-28.2 18.9-44 25.4l-12.5 57.1c-2 9.1-9 16.3-18.2 17.8c-13.8 2.3-28 3.5-42.5 3.5s-28.7-1.2-42.5-3.5c-9.2-1.5-16.2-8.7-18.2-17.8l-12.5-57.1c-15.8-6.5-30.6-15.1-44-25.4L83.1 425.9c-8.8 2.8-18.6 .3-24.5-6.8c-8.1-9.8-15.5-20.2-22.1-31.2l-4.7-8.1c-6.1-11-11.4-22.4-15.8-34.3c-3.2-8.7-.5-18.4 6.4-24.6l43.3-39.4C64.6 273.1 64 264.6 64 256s.6-17.1 1.7-25.4L22.4 191.2c-6.9-6.2-9.6-15.9-6.4-24.6c4.4-11.9 9.7-23.3 15.8-34.3l4.7-8.1c6.6-11 14-21.4 22.1-31.2c5.9-7.2 15.7-9.6 24.5-6.8l55.7 17.7c13.4-10.3 28.2-18.9 44-25.4l12.5-57.1c2-9.1 9-16.3 18.2-17.8C227.3 1.2 241.5 0 256 0s28.7 1.2 42.5 3.5c9.2 1.5 16.2 8.7 18.2 17.8l12.5 57.1c15.8 6.5 30.6 15.1 44 25.4l55.7-17.7c8.8-2.8 18.6-.3 24.5 6.8c8.1 9.8 15.5 20.2 22.1 31.2l4.7 8.1c6.1 11 11.4 22.4 15.8 34.3zM256 336a80 80 0 1 0 0-160 80 80 0 1 0 0 160z" },
   user:       { vb:"0 0 448 512", d:"M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z" },
   coins:      { vb:"0 0 512 512", d:"M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .3-24.5 .8L167 115.2C132.5 89.7 128 62.8 128 48c0-18 14.3-34.6 38.4-48C190.4 .1 224 0 256 0c144.6 0 256 34.3 256 80zM128 176c0 18 14.3 34.6 38.4 48c14.8 8.2 33.6 15.1 55 20.1C174.4 250.5 128 266.9 128 288c0 5.8 1.8 11.4 5 16.7V480c0 17.7-14.3 32-32 32S64 497.7 64 480V176c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16zm64 272V368c20.5 5.1 43.4 8 68 8c80.5 0 144-26.3 144-64V176c0-18-14.3-34.6-38.4-48C340.1 110.1 296.5 96 244.4 96c10.2 3.4 20 7.3 29.1 11.7C324.2 127.4 384 153.9 384 176c0 18-14.3 34.6-38.4 48C316.5 240.1 272.9 256 224 256c-13.5 0-26.5-.9-38.8-2.6c-5.4 6.3-8.5 13.8-8.5 21.6c0 18 14.3 34.6 38.4 48c6.9 3.8 14.4 7.2 22.4 10.2V448z" },
+  moneyBill:  { vb:"0 0 576 512", d:"M64 64C28.7 64 0 92.7 0 128V384c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V128c0-35.3-28.7-64-64-64H64zm64 320H64V320c35.3 0 64 28.7 64 64zM64 192V128h64c0 35.3-28.7 64-64 64zM448 384c0-35.3 28.7-64 64-64v64H448zm64-192c-35.3 0-64-28.7-64-64h64v64zM288 160a96 96 0 1 1 0 192 96 96 0 1 1 0-192z" },
+  cardFill:   { vb:"0 0 576 512", d:"M64 32C28.7 32 0 60.7 0 96v32H576V96c0-35.3-28.7-64-64-64H64zM576 224H0V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V224zM112 352h64c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm48-32H224c8.8 0 16 7.2 16 16s-7.2 16-16 16H160c-8.8 0-16-7.2-16-16s7.2-16 16-16z" },
   hourglass:  { vb:"0 0 384 512", d:"M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64V75c0 42.4 16.9 83.1 46.9 113.1L146.7 256 78.9 323.9C48.9 353.9 32 394.6 32 437v11C14.3 448 0 462.3 0 480s14.3 32 32 32H352c17.7 0 32-14.3 32-32s-14.3-32-32-32V437c0-42.4-16.9-83.1-46.9-113.1L237.3 256l67.9-67.9C335.1 158.1 352 117.4 352 75V64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM96 75V64H288V75c0 19-5.6 37.4-16 53H112C101.6 112.4 96 94 96 75zm16 309c3.5-5.3 7.6-10.3 12.1-14.9L192 301.3l67.9 67.9c4.5 4.6 8.6 9.6 12.1 14.9H112z" },
   trendDown:  { vb:"0 0 576 512", d:"M384 352c-17.7 0-32 14.3-32 32s14.3 32 32 32H544c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32s-32 14.3-32 32v82.7L342.6 137.4c-12.5-12.5-32.8-12.5-45.3 0L192 242.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0L320 205.3 466.7 352H384z" },
   triangleEx: { vb:"0 0 512 512", d:"M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z" },
@@ -540,7 +542,7 @@ export default function App() {
     {id:"dashboard",label:"Dashboard", icon:"chartLine",      color:"#00e5a0"},
     {id:"income",   label:"Income",    icon:"wallet",         color:"#00e5a0"},
     {id:"pending",  label:"Pending",   icon:"hourglass",      color:"#f0a500"},
-    {id:"expenses", label:"Expenses",  icon:"withdrawWallet", color:"#ff5c5c"},
+    {id:"expenses", label:"Expenses",  icon:"cardFill",       color:"#ff5c5c"},
     {id:"plans",    label:"Plans",     icon:"bullseye",       color:"#9370db"},
   ];
   const commonProps={f,t,currency,rates};
@@ -1003,11 +1005,11 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             </select>
           )}
           {summaryMode==="average"&&<div style={{fontSize:11,color:t.subText,marginBottom:12}}>Based on {monthsCount} month{monthsCount!==1?"s":""} with transactions</div>}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             {summaryData.map(([l,v,c])=>(
-              <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 10px",textAlign:"center",minWidth:0,overflow:"hidden"}}>
-                <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l}</div>
-                <div style={{fontSize:13,fontWeight:800,color:c,marginTop:6,wordBreak:"break-word",lineHeight:1.3}}>{f(v)}</div>
+              <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 12px",textAlign:"center",minWidth:0}}>
+                <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
+                <div style={{fontSize:14,fontWeight:800,color:c,marginTop:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f(v)}</div>
               </div>
             ))}
           </div>
@@ -1134,9 +1136,9 @@ function SettingsPage({ settings, setSetting, t, installPrompt, setInstallPrompt
 function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, finance, fname, f, t }) {
   const activePlans=(finance.plans||[]).filter(p=>!p.completed).length;
   const cards=[
-    {label:"Total Income",    value:totalIncome,   color:"#00e5a0", icon:"coins"},
+    {label:"Total Income",    value:totalIncome,   color:"#00e5a0", icon:"moneyBill"},
     {label:"Pending Payment", value:totalPending,  color:"#f0a500", icon:"hourglass"},
-    {label:"Total Expenses",  value:totalExpenses, color:"#ff5c5c", icon:"withdrawWallet"},
+    {label:"Total Expenses",  value:totalExpenses, color:"#ff5c5c", icon:"cardFill"},
     {label:"Net Balance",     value:netBalance,    color:netBalance>=0?"#00e5a0":"#ff5c5c", icon:"creditCard"},
   ];
   const recentTx=[...(finance.income||[]).map(i=>({...i,type:"income"})),...(finance.expenses||[]).map(i=>({...i,type:"expense"})),...(finance.pending||[]).map(i=>({...i,type:"pending"}))].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
@@ -1161,7 +1163,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         <div><div style={{fontSize:14,fontWeight:700,color:"#9370db"}}>{activePlans} Active Plan{activePlans>1?"s":""}</div><div style={{fontSize:12,color:t.subText}}>Budget plans in progress</div></div>
       </div>}
       <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20,marginBottom:12}}>
-        <div style={{fontSize:15,fontWeight:700,marginBottom:14}}>📅 This Month</div>
+        <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8}}><Ico name="chartLine" size={15} color="#00e5a0"/> This Month</div>
         <div style={{display:"flex",gap:24,flexWrap:"wrap"}}>
           {[["EARNED",monthIncome,"#00e5a0"],["SPENT",monthExpenses,"#ff5c5c"],["SAVED",monthIncome-monthExpenses,monthIncome-monthExpenses>=0?"#00e5a0":"#ff5c5c"]].map(([l,v,c])=>(
             <div key={l}><div style={{fontSize:11,color:t.subText}}>{l}</div><div style={{fontSize:22,fontWeight:800,color:c}}>{f(v)}</div></div>
@@ -1175,12 +1177,12 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         </div>}
       </div>
       <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20}}>
-        <div style={{fontSize:15,fontWeight:700,marginBottom:14}}>🕐 Recent Transactions</div>
+        <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8}}><Ico name="hourglass" size={14} color="#4a7fa5"/> Recent Transactions</div>
         {recentTx.length===0&&<div style={{color:t.subText,fontSize:13}}>No transactions yet. Add some!</div>}
         {recentTx.map(tx=>(
           <div key={tx.id+tx.type} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:`1px solid ${t.sectionBorder}`}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <Ico name={tx.type==="income"?"coins":tx.type==="pending"?"hourglass":"withdrawWallet"} size={14} color={tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}/>
+              <Ico name={tx.type==="income"?"coins":tx.type==="pending"?"hourglass":"cardFill"} size={14} color={tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}/>
               <div><div style={{fontSize:13,fontWeight:600,color:t.text}}>{tx.client||tx.category||"—"}</div><div style={{fontSize:11,color:t.subText}}>{tx.date}</div></div>
             </div>
             <div style={{fontWeight:800,fontSize:14,color:tx.type==="income"?"#00e5a0":tx.type==="pending"?"#f0a500":"#ff5c5c"}}>{tx.type==="expense"?"−":"+"}{f(tx.amount)}</div>
@@ -1312,7 +1314,7 @@ function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates })
   return (
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-        <div style={{fontSize:22,fontWeight:800,display:"flex",alignItems:"center",gap:8}}><Ico name="withdrawWallet" size={20} color="#ff5c5c"/>Expenses</div>
+        <div style={{fontSize:22,fontWeight:800,display:"flex",alignItems:"center",gap:8}}><Ico name="cardFill" size={20} color="#ff5c5c"/>Expenses</div>
         <button onClick={()=>setShow(!show)} style={bSt("#ff5c5c")}>+ Add Expense</button>
       </div>
       {show&&<FormCard color="#ff5c5c" t={t}>
