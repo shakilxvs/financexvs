@@ -1683,7 +1683,7 @@ function PendingTab({ data, onAdd, onMarkPaid, onUpdate, onDelete, onOpenInvoice
               </div>
               <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:6}}>
                 <div style={{fontWeight:800,color:"#f0a500",fontSize:15,whiteSpace:"nowrap"}}>{f(item.amount)}</div>
-                <ThreeDotMenu t={t} options={[{icon:<Ico name="squareCheck" size={12} color={t.subText}/>,label:" Mark Paid",action:()=>onMarkPaid(item.id)},{icon:<Ico name="pen" size={12} color={t.subText}/>,label:" Edit",action:()=>setEditId(editId===item.id?null:item.id)},{icon:<Ico name="trash" size={12} color="#ff5c5c"/>,label:" Delete",danger:true,action:()=>onDelete(item.id,item.client)}]}/>
+                <ThreeDotMenu t={t} options={[{icon:<Ico name="squareCheck" size={12} color={t.subText}/>,label:" Received",action:()=>onMarkPaid(item.id)},{icon:<Ico name="pen" size={12} color={t.subText}/>,label:" Edit",action:()=>setEditId(editId===item.id?null:item.id)},{icon:<Ico name="trash" size={12} color="#ff5c5c"/>,label:" Delete",danger:true,action:()=>onDelete(item.id,item.client)}]}/>
               </div>
             </div>
             {editId===item.id&&<InlineEdit t={t} currency={currency} rates={rates} item={item} fields={[{key:"client",label:"Client Name"},{key:"amount",label:"Amount",isAmount:true},{key:"date",label:"Invoice Date",type:"date"},{key:"dueDate",label:"Due Date",type:"date"},{key:"note",label:"Note"}]} onSave={v=>{onUpdate(item.id,v);setEditId(null);}} onCancel={()=>setEditId(null)}/>}
