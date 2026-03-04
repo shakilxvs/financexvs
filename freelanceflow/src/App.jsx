@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend
+} from "recharts";
+import {
   signInWithPopup, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   updateProfile, sendEmailVerification
@@ -1190,6 +1194,194 @@ function SettingsPage({ settings, setSetting, t, installPrompt, setInstallPrompt
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────
+// ── CHART TOOLTIP ─────────────────────────────────────────────
+function ChartTooltip({ active, payload, label, f, t }) {
+  if (!active||!payload||!payload.length) return null;
+  return (
+    <div style={{background:t.popupBg,border:`1px solid ${t.cardBorder}`,borderRadius:12,padding:"10px 14px",fontSize:12,boxShadow:"0 8px 24px rgba(0,0,0,0.3)"}}>
+      {label&&<div style={{color:t.subText,marginBottom:6,fontWeight:700}}>{label}</div>}
+      {payload.map((p,i)=>(
+        <div key={i} style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:p.color,flexShrink:0}}/>
+          <span style={{color:t.subText}}>{p.name}:</span>
+          <span style={{color:p.color,fontWeight:700}}>{f(p.value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── DASHBOARD CHARTS ──────────────────────────────────────────
+function DashboardCharts({ finance, f, t }) {
+  const [activeChart, setActiveChart] = useState("bar");
+
+  // ── Build last 6 months of data ──
+  const now = new Date();
+  const months = Array.from({length:6},(_,i)=>{
+    const d = new Date(now.getFullYear(), now.getMonth()-5+i, 1);
+    return d.toISOString().slice(0,7);
+  });
+  const monthLabels = months.map(m=>new Date(m+"-01").toLocaleString("default",{month:"short"}));
+
+  const barData = months.map((m,i)=>({
+    name: monthLabels[i],
+    Income: finance.income.filter(x=>x.date?.startsWith(m)).reduce((s,x)=>s+Number(x.amount),0),
+    Expenses: finance.expenses.filter(x=>x.date?.startsWith(m)).reduce((s,x)=>s+Number(x.amount),0),
+  }));
+
+  // ── Trend line: net savings per month ──
+  const trendData = barData.map(d=>({
+    name: d.name,
+    Net: d.Income - d.Expenses,
+    Income: d.Income,
+    Expenses: d.Expenses,
+  }));
+
+  // ── Pie: spending by category ──
+  const PIE_COLORS = ["#00e5a0","#f0a500","#ff5c5c","#9370db","#4d96ff","#6bcb77","#f78c6c"];
+  const catTotals = {};
+  finance.expenses.forEach(x=>{
+    catTotals[x.category] = (catTotals[x.category]||0) + Number(x.amount);
+  });
+  const pieData = Object.entries(catTotals)
+    .map(([name,value])=>({name,value}))
+    .sort((a,b)=>b.value-a.value)
+    .slice(0,7);
+
+  const hasData = finance.income.length>0||finance.expenses.length>0;
+
+  const chartTabs = [
+    {id:"bar",   label:"📊 Monthly"},
+    {id:"trend", label:"📈 Trend"},
+    {id:"pie",   label:"🥧 Spending"},
+  ];
+
+  // Custom tick that truncates long amounts
+  const yTickFormatter = v => {
+    if (v===0) return "0";
+    if (v>=1e9) return (v/1e9).toFixed(1)+"B";
+    if (v>=1e6) return (v/1e6).toFixed(1)+"M";
+    if (v>=1e3) return (v/1e3).toFixed(0)+"K";
+    return String(v);
+  };
+
+  return (
+    <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20,marginBottom:14}}>
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <Ico name="chartLine" size={16} color="#00e5a0"/>
+          <span style={{fontSize:15,fontWeight:700,color:t.text}}>Analytics</span>
+        </div>
+        <div style={{display:"flex",gap:4,background:t.tabBg,borderRadius:10,padding:"3px 4px",flexShrink:0}}>
+          {chartTabs.map(ct=>(
+            <button key={ct.id} onClick={()=>setActiveChart(ct.id)} style={{
+              padding:"5px 10px",
+              background:activeChart===ct.id?t.tabActive:"transparent",
+              border:`1px solid ${activeChart===ct.id?t.tabActiveBorder:"transparent"}`,
+              borderRadius:8,color:activeChart===ct.id?t.tabActiveText:t.tabInactive,
+              cursor:"pointer",fontSize:11,fontWeight:activeChart===ct.id?700:400,whiteSpace:"nowrap"
+            }}>{ct.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {!hasData && (
+        <div style={{textAlign:"center",padding:"32px 0",color:t.subText,fontSize:13}}>
+          Add income & expenses to see your analytics 📊
+        </div>
+      )}
+
+      {hasData && activeChart==="bar" && (
+        <div>
+          <div style={{fontSize:11,color:t.subText,marginBottom:10}}>Monthly Income vs Expenses — last 6 months</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={barData} barCategoryGap="30%" barGap={3}>
+              <CartesianGrid strokeDasharray="3 3" stroke={t.sectionBorder} vertical={false}/>
+              <XAxis dataKey="name" tick={{fill:t.subText,fontSize:11}} axisLine={false} tickLine={false}/>
+              <YAxis tickFormatter={yTickFormatter} tick={{fill:t.subText,fontSize:10}} axisLine={false} tickLine={false} width={36}/>
+              <Tooltip content={<ChartTooltip f={f} t={t}/>}/>
+              <Bar dataKey="Income"   fill="#00e5a0" radius={[4,4,0,0]} name="Income"/>
+              <Bar dataKey="Expenses" fill="#ff5c5c" radius={[4,4,0,0]} name="Expenses"/>
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{display:"flex",gap:16,justifyContent:"center",marginTop:10}}>
+            {[["Income","#00e5a0"],["Expenses","#ff5c5c"]].map(([label,color])=>(
+              <div key={label} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:t.subText}}>
+                <div style={{width:10,height:10,borderRadius:3,background:color}}/>
+                {label}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasData && activeChart==="trend" && (
+        <div>
+          <div style={{fontSize:11,color:t.subText,marginBottom:10}}>Net savings trend — last 6 months</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" stroke={t.sectionBorder} vertical={false}/>
+              <XAxis dataKey="name" tick={{fill:t.subText,fontSize:11}} axisLine={false} tickLine={false}/>
+              <YAxis tickFormatter={yTickFormatter} tick={{fill:t.subText,fontSize:10}} axisLine={false} tickLine={false} width={36}/>
+              <Tooltip content={<ChartTooltip f={f} t={t}/>}/>
+              <Line type="monotone" dataKey="Income"   stroke="#00e5a0" strokeWidth={2} dot={{r:4,fill:"#00e5a0"}} name="Income"/>
+              <Line type="monotone" dataKey="Expenses" stroke="#ff5c5c" strokeWidth={2} dot={{r:4,fill:"#ff5c5c"}} name="Expenses"/>
+              <Line type="monotone" dataKey="Net"      stroke="#4d96ff" strokeWidth={2.5} dot={{r:4,fill:"#4d96ff"}} strokeDasharray="5 3" name="Net"/>
+            </LineChart>
+          </ResponsiveContainer>
+          <div style={{display:"flex",gap:16,justifyContent:"center",marginTop:10}}>
+            {[["Income","#00e5a0"],["Expenses","#ff5c5c"],["Net","#4d96ff"]].map(([label,color])=>(
+              <div key={label} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:t.subText}}>
+                <div style={{width:10,height:10,borderRadius:3,background:color}}/>
+                {label}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasData && activeChart==="pie" && (
+        <div>
+          <div style={{fontSize:11,color:t.subText,marginBottom:10}}>Spending breakdown by category</div>
+          {pieData.length===0
+            ? <div style={{textAlign:"center",padding:"24px 0",color:t.subText,fontSize:13}}>No expenses recorded yet.</div>
+            : (
+              <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+                <div style={{flex:"0 0 auto"}}>
+                  <ResponsiveContainer width={180} height={180}>
+                    <PieChart>
+                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={46} outerRadius={80}
+                        dataKey="value" paddingAngle={3} stroke="none">
+                        {pieData.map((_,i)=><Cell key={i} fill={PIE_COLORS[i%PIE_COLORS.length]}/>)}
+                      </Pie>
+                      <Tooltip content={<ChartTooltip f={f} t={t}/>}/>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={{flex:"1 1 120px",display:"flex",flexDirection:"column",gap:6}}>
+                  {pieData.map((d,i)=>{
+                    const total = pieData.reduce((s,x)=>s+x.value,0);
+                    const pct = total>0 ? Math.round((d.value/total)*100) : 0;
+                    return (
+                      <div key={d.name} style={{display:"flex",alignItems:"center",gap:6}}>
+                        <div style={{width:8,height:8,borderRadius:"50%",background:PIE_COLORS[i%PIE_COLORS.length],flexShrink:0}}/>
+                        <div style={{flex:1,fontSize:11,color:t.text,fontWeight:600}}>{d.name}</div>
+                        <div style={{fontSize:11,color:PIE_COLORS[i%PIE_COLORS.length],fontWeight:700}}>{pct}%</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )
+          }
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────
 function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, finance, fname, f, t }) {
   const activePlans=(finance.plans||[]).filter(p=>!p.completed).length;
 
@@ -1204,13 +1396,17 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
 
   return (
     <div>
+      {/* ── Greeting ── */}
       <div style={{fontSize:24,fontWeight:800,marginBottom:18,marginTop:6,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
         <span style={{fontSize:26}}>👋</span>
         Hey, {fname}!
         <span style={{fontSize:13,color:t.subText,fontWeight:400,marginLeft:4}}>{new Date().toLocaleString("default",{month:"long",year:"numeric"})}</span>
       </div>
 
-      {/* ── Dynamic flex: cards grow wider when number is long ── */}
+      {/* ── Analytics Charts ── */}
+      <DashboardCharts finance={finance} f={f} t={t}/>
+
+      {/* ── Stat Cards: dynamic flex ── */}
       <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:16}}>
         {cards.map(c=>{
           const fmtStr = f(c.value);
@@ -1248,6 +1444,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         <div><div style={{fontSize:14,fontWeight:700,color:"#9370db"}}>{activePlans} Active Plan{activePlans>1?"s":""}</div><div style={{fontSize:12,color:t.subText}}>Budget plans in progress</div></div>
       </div>}
 
+      {/* ── This Month ── */}
       <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20,marginBottom:12}}>
         <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8}}><Ico name="chartLine" size={15} color="#00e5a0"/> This Month</div>
         <div style={{display:"flex",gap:24,flexWrap:"wrap"}}>
@@ -1263,8 +1460,8 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         </div>}
       </div>
 
+      {/* ── Recent Transactions ── */}
       <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20}}>
-        {/* ── FIXED: clock icon for header, creditCard icon for income items ── */}
         <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
           <Ico name="clock" size={15} color="#4a7fa5"/> Recent Transactions
         </div>
