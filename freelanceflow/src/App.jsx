@@ -1366,8 +1366,8 @@ function ChartsSection({ finance, f, t }) {
 
   const legendDot = { display:"flex", alignItems:"center", gap:6, fontSize:11 };
 
-  // Donut size scales with card height
-  const donutSize = isMobile ? 180 : 280;
+  // Donut capped to fit inside card (CARD_H minus title + padding)
+  const donutSize = isMobile ? 155 : 235;
 
   // Fixed pixel height so all three cards are exactly the same size
   const CARD_H = isMobile ? 215 : 300;
@@ -1412,18 +1412,18 @@ function ChartsSection({ finance, f, t }) {
     <div style={cardBase}>
       <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:12}}>Spending by Category</div>
       {donutSlices.length > 0 ? (
-        <div style={{flex:1,minHeight:0,display:"flex",gap:isMobile?12:20,alignItems:"center"}}>
-          {/* Donut — centered left */}
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <div style={{flex:1,minHeight:0,overflow:"hidden",display:"flex",gap:isMobile?14:24,alignItems:"center"}}>
+          {/* Donut — left-aligned, no centering wrapper */}
+          <div style={{flexShrink:0}}>
             <SVGDonut slices={donutSlices} t={t} size={donutSize}/>
           </div>
-          {/* Category list — centered right */}
-          <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",justifyContent:"center",gap:isMobile?4:6}}>
+          {/* Category list — vertically centered */}
+          <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",justifyContent:"center",gap:isMobile?5:7}}>
             {donutSlices.map((s) => (
-              <div key={s.cat} style={{display:"flex",alignItems:"center",gap:6}}>
-                <span style={{width:8,height:8,borderRadius:2,background:s.color,flexShrink:0,display:"inline-block"}}/>
-                <span style={{color:t.subText,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:isMobile?10:12}}>{s.cat}</span>
-                <span style={{color:t.text,fontWeight:700,flexShrink:0,fontSize:isMobile?10:12}}>{Math.round(s.pct*100)}%</span>
+              <div key={s.cat} style={{display:"flex",alignItems:"center",gap:7}}>
+                <span style={{width:9,height:9,borderRadius:2,background:s.color,flexShrink:0,display:"inline-block"}}/>
+                <span style={{color:t.subText,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:isMobile?12:13}}>{s.cat}</span>
+                <span style={{color:t.text,fontWeight:700,flexShrink:0,fontSize:isMobile?12:13}}>{Math.round(s.pct*100)}%</span>
               </div>
             ))}
           </div>
