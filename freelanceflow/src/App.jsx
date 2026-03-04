@@ -162,22 +162,22 @@ function isAndroidMobile() {
   return /Android/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent);
 }
 
-// ── Dynamic font size for large amounts ───────────────────────
-function amtFontSize(str) {
+// ── Dynamic font size — only shrinks for truly huge numbers ──
+// isMobile: slightly more aggressive since cards are narrower
+function amtFontSize(str, isMobile) {
   const l = (str||"").length;
-  if (l > 20) return 11;
-  if (l > 17) return 12;
-  if (l > 14) return 13;
-  if (l > 11) return 15;
-  return 18;
-}
-
-// ── Dynamic flex for dashboard cards ─────────────────────────
-function cardFlex(formattedValue) {
-  const l = (formattedValue||"").length;
-  if (l > 16) return "3 1 200px";
-  if (l > 12) return "2 1 170px";
-  return "1 1 140px";
+  if (isMobile) {
+    if (l > 18) return 11;
+    if (l > 15) return 13;
+    if (l > 12) return 15;
+    return 18;
+  } else {
+    // Desktop has wider cards — only shrink when really long
+    if (l > 20) return 12;
+    if (l > 17) return 14;
+    if (l > 14) return 16;
+    return 18;
+  }
 }
 
 
@@ -644,7 +644,7 @@ export default function App() {
 
       {/* ── Content ── */}
       <div style={{maxWidth:820,margin:"0 auto",padding:"14px 14px 48px"}}>
-        {tab==="dashboard" && <Dashboard totalIncome={totalIncome} totalPending={totalPending} totalExpenses={totalExpenses} netBalance={netBalance} monthIncome={monthIncome} monthExpenses={monthExpenses} finance={finance} fname={fname} {...commonProps}/>}
+        {tab==="dashboard" && <Dashboard totalIncome={totalIncome} totalPending={totalPending} totalExpenses={totalExpenses} netBalance={netBalance} monthIncome={monthIncome} monthExpenses={monthExpenses} finance={finance} fname={fname} isMobile={isMobile} {...commonProps}/>}
         {tab==="income"    && <IncomeTab   data={finance.income}   onAdd={i=>addItem("income",i)}   onUpdate={(id,v)=>updateItem("income",id,v)}   onDelete={(id,n)=>confirmDelete("income",id,n)}   {...commonProps}/>}
         {tab==="pending"   && <PendingTab  data={finance.pending}  onAdd={i=>addItem("pending",i)}  onMarkPaid={markPaid} onUpdate={(id,v)=>updateItem("pending",id,v)} onDelete={(id,n)=>confirmDelete("pending",id,n)} onOpenInvoice={()=>setInvoiceOpen(true)} {...commonProps}/>}
         {tab==="expenses"  && <ExpensesTab data={finance.expenses} onAdd={i=>addItem("expenses",i)} onUpdate={(id,v)=>updateItem("expenses",id,v)} onDelete={(id,n)=>confirmDelete("expenses",id,n)} {...commonProps}/>}
@@ -1039,7 +1039,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           <div style={{display:"grid",gridTemplateColumns:summaryCols,gap:10}}>
             {summaryData.map(([l,v,c])=>{
               const fmtStr = f(v);
-              const fs = fmtStr.length > 18 ? 12 : fmtStr.length > 14 ? 13 : fmtStr.length > 10 ? 15 : 17;
+              const fs = fmtStr.length > 20 ? 13 : fmtStr.length > 16 ? 15 : fmtStr.length > 12 ? 17 : 19;
               return (
                 <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 12px",textAlign:"center",minWidth:0}}>
                   <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8}}>{l}</div>
@@ -1172,7 +1172,7 @@ function SettingsPage({ settings, setSetting, t, installPrompt, setInstallPrompt
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────
-function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, finance, fname, f, t }) {
+function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, finance, fname, f, t, isMobile }) {
   const activePlans=(finance.plans||[]).filter(p=>!p.completed).length;
 
   const cards=[
@@ -1192,22 +1192,25 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         <span style={{fontSize:13,color:t.subText,fontWeight:400,marginLeft:4}}>{new Date().toLocaleString("default",{month:"long",year:"numeric"})}</span>
       </div>
 
-      {/* ── FIXED: Dynamic flex layout so large numbers never overflow ── */}
-      <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:16}}>
+      {/* ── Cards: always equal 2×2 on mobile, 4-col on desktop ── */}
+      <div style={{
+        display:"grid",
+        gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)",
+        gap:10,
+        marginBottom:16,
+      }}>
         {cards.map(c=>{
           const fmtStr = f(c.value);
-          const fs = amtFontSize(fmtStr);
-          const flexVal = cardFlex(fmtStr);
+          const fs = amtFontSize(fmtStr, isMobile);
           return (
             <div key={c.label} style={{
               background:`${c.color}12`,
               border:`1px solid ${c.color}30`,
               borderRadius:18,
-              padding:"18px 16px",
-              flex:flexVal,
-              minWidth:130,
+              padding: isMobile ? "16px 14px" : "20px 18px",
               boxSizing:"border-box",
               overflow:"hidden",
+              minWidth:0,
             }}>
               <Ico name={c.icon} size={20} color={c.color}/>
               <div style={{fontSize:10,color:t.subText,marginTop:10,textTransform:"uppercase",letterSpacing:1,lineHeight:1.4}}>{c.label}</div>
