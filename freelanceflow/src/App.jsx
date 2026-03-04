@@ -1039,8 +1039,8 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
               <div style={{width:Math.min(100,(totalIncome/totalExpenses)*100)+"%",background:"#ff5c5c",height:"100%",borderRadius:99,transition:"width 0.8s"}}/>
             </div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
-              <span>{f(0)}</span>
-              <span style={{color:"#ff5c5c",fontWeight:600}}>{((totalIncome/totalExpenses)*100).toFixed(1)}% → {f(Math.abs(totalSavings))}</span>
+              <span>{f(totalIncome)}</span>
+              <span style={{color:"#ff5c5c",fontWeight:600}}>{((totalIncome/totalExpenses)*100).toFixed(1)}% → {f(totalExpenses)}</span>
             </div>
             <div style={{fontSize:11,color:t.subText,marginTop:8}}>Earn <span style={{color:"#ff5c5c",fontWeight:700}}>{f(Math.abs(totalSavings))}</span> more to be debt-free</div>
           </div>
