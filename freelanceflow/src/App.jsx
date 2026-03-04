@@ -928,7 +928,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
   const totalNetUSD    = totalSavings/(rates?.BDT||110); // net value for leveling
   const curLvl  = getLevel(totalSavings>=0 ? totalNetUSD : 0);
   const nextLvl = LEVELS[LEVELS.indexOf(curLvl)+1];
-  const progress = nextLvl ? Math.min(100,((totalNetUSD-curLvl.minUSD)/(nextLvl.minUSD-curLvl.minUSD))*100) : 100;
+  const progress = nextLvl ? Math.min(100,(totalNetUSD/nextLvl.minUSD)*100) : 100;
 
   const summaryData = summaryMode==="alltime"
     ? [["Earning",totalIncome,"#00e5a0"],["Spending",totalExpenses,"#ff5c5c"],["Saving",totalSavings,totalSavings>=0?"#00e5a0":"#ff5c5c"]]
