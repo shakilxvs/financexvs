@@ -1175,7 +1175,7 @@ function SVGBarChart({ data, t }) {
   const barW   = Math.min(20, slotW * 0.33);
 
   return (
-    <svg viewBox={"0 0 " + W + " " + H} style={{width:"100%",height:"auto",display:"block"}}>
+    <svg viewBox={"0 0 " + W + " " + H} style={{width:"100%",height:"100%",display:"block"}}>
       {[0.25, 0.5, 0.75, 1].map((r, i) => (
         <line key={i}
           x1={PL} y1={PT + chartH - r * chartH}
@@ -1267,7 +1267,7 @@ function SVGTrendLine({ data, t }) {
   };
 
   return (
-    <svg viewBox={"0 0 " + W + " " + H} style={{width:"100%",height:"auto",display:"block"}}>
+    <svg viewBox={"0 0 " + W + " " + H} style={{width:"100%",height:"100%",display:"block"}}>
       {[0.5, 1].map((r, i) => (
         <line key={i}
           x1={PL} y1={PT + chartH - r * chartH}
@@ -1364,10 +1364,12 @@ function ChartsSection({ finance, f, t }) {
 
   const legendDot = { display:"flex", alignItems:"center", gap:6, fontSize:11 };
 
-  // Donut is larger on desktop so the card fills the same vertical space as chart cards
-  const donutSize = isMobile ? 88 : 160;
+  // Donut size scales with card height
+  const donutSize = isMobile ? 90 : 140;
 
-  // All three cards share identical base styles
+  // Fixed pixel height so all three cards are exactly the same size
+  const CARD_H = isMobile ? 215 : 300;
+
   const cardBase = {
     background: t.sectionBg,
     border: `1px solid ${t.sectionBorder}`,
@@ -1375,21 +1377,26 @@ function ChartsSection({ finance, f, t }) {
     padding: "16px 16px 14px",
     boxSizing: "border-box",
     width: "100%",
+    height: CARD_H,
     display: "flex",
     flexDirection: "column",
   };
 
-  // Chart wrapper: grows to fill remaining card height, never clips
-  const chartWrap = { flex: 1, minHeight: 0 };
+  // chartWrap gets remaining height after title + legend rows; SVG fills it via height:100%
+  const chartWrap = { flex: 1, minHeight: 0, overflow: "hidden" };
 
   const cards = [
     // ── Card 0: Spending by Category ──
     <div style={cardBase}>
       <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:12}}>Spending by Category</div>
       {donutSlices.length > 0 ? (
-        <div style={{flex:1,display:"flex",gap:isMobile?12:20,alignItems:"center"}}>
-          <SVGDonut slices={donutSlices} t={t} size={donutSize}/>
-          <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:isMobile?5:7}}>
+        <div style={{flex:1,minHeight:0,display:"flex",gap:isMobile?12:20,alignItems:"center"}}>
+          {/* Donut — centered left */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <SVGDonut slices={donutSlices} t={t} size={donutSize}/>
+          </div>
+          {/* Category list — centered right */}
+          <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",justifyContent:"center",gap:isMobile?4:6}}>
             {donutSlices.map((s) => (
               <div key={s.cat} style={{display:"flex",alignItems:"center",gap:6}}>
                 <span style={{width:8,height:8,borderRadius:2,background:s.color,flexShrink:0,display:"inline-block"}}/>
@@ -1400,7 +1407,7 @@ function ChartsSection({ finance, f, t }) {
           </div>
         </div>
       ) : (
-        <div style={{color:t.subText,fontSize:12,textAlign:"center",padding:"32px 0"}}>No expense data yet</div>
+        <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:t.subText,fontSize:12}}>No expense data yet</div>
       )}
     </div>,
 
