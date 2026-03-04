@@ -1165,8 +1165,9 @@ function SettingsPage({ settings, setSetting, t, installPrompt, setInstallPrompt
 
 // ── PURE SVG CHART COMPONENTS ─────────────────────────────────
 
+// ── CHANGE 2: SVGBarChart H changed from 160 → 130 to match SVGTrendLine height ──
 function SVGBarChart({ data, t }) {
-  const W = 340, H = 160, PL = 10, PR = 10, PT = 10, PB = 24;
+  const W = 340, H = 130, PL = 10, PR = 10, PT = 10, PB = 24;
   const chartW = W - PL - PR;
   const chartH = H - PT - PB;
   const maxVal = Math.max(...data.map(d => Math.max(d.income, d.expenses)), 1);
@@ -1203,8 +1204,8 @@ function SVGBarChart({ data, t }) {
 function SVGDonut({ slices, t, size=130 }) {
   const SIZE = size;
   const cx = SIZE / 2, cy = SIZE / 2;
-  const R = SIZE * 0.369; // ~48 at default 130
-  const r = SIZE * 0.231; // ~30 at default 130
+  const R = SIZE * 0.369;
+  const r = SIZE * 0.231;
 
   if (!slices || slices.length === 0) return null;
 
@@ -1296,8 +1297,9 @@ function ChartsSection({ finance, f, t }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const touchStartX = useRef(null);
   const mouseStartX = useRef(null);
+  const isDragging  = useRef(false);
 
-  // Build last-6-months data (hooks must come before any early return)
+  // Build last-6-months data
   const monthKeys = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date();
@@ -1321,7 +1323,8 @@ function ChartsSection({ finance, f, t }) {
   const hasAnyData = finance.income.length > 0 || finance.expenses.length > 0;
   if (!hasAnyData) return null;
 
-  // Touch / mouse swipe handlers
+  // ── CHANGE 4: Fixed touch handlers — separate onMouseLeave so it only
+  //    cancels the drag without firing a swipe (prevents ghost swipes on desktop).
   const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
   const onTouchEnd   = (e) => {
     if (touchStartX.current === null) return;
@@ -1331,20 +1334,30 @@ function ChartsSection({ finance, f, t }) {
     }
     touchStartX.current = null;
   };
-  const onMouseDown  = (e) => { mouseStartX.current = e.clientX; };
+  const onMouseDown  = (e) => {
+    mouseStartX.current = e.clientX;
+    isDragging.current  = true;
+  };
   const onMouseUp    = (e) => {
-    if (mouseStartX.current === null) return;
+    if (!isDragging.current || mouseStartX.current === null) return;
     const diff = mouseStartX.current - e.clientX;
     if (Math.abs(diff) > 40) {
       setActiveIdx(i => diff > 0 ? Math.min(2, i + 1) : Math.max(0, i - 1));
     }
     mouseStartX.current = null;
+    isDragging.current  = false;
+  };
+  // Only cancel — do NOT trigger a swipe when the cursor leaves mid-drag
+  const onMouseLeave = () => {
+    mouseStartX.current = null;
+    isDragging.current  = false;
   };
 
   const legendDot = { display:"flex", alignItems:"center", gap:6, fontSize:11 };
   const donutSize = isMobile ? 88 : 108;
 
-  // Shared card base style
+  // ── CHANGE 2 (cont.): cardBase gets a consistent minHeight so all three
+  //    cards share the same visual footprint as the Income Trend card.
   const cardBase = {
     background: t.sectionBg,
     border: `1px solid ${t.sectionBorder}`,
@@ -1352,20 +1365,12 @@ function ChartsSection({ finance, f, t }) {
     padding: "16px 16px 14px",
     boxSizing: "border-box",
     width: "100%",
+    minHeight: 220,
   };
 
+  // ── CHANGE 3: New card order — Spending by Category → Income Trend → Monthly Bar ──
   const cards = [
-    // ── Card 0: Monthly Income vs Expenses ──
-    <div style={cardBase}>
-      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Monthly Income vs Expenses</div>
-      <div style={{display:"flex",gap:16,marginBottom:8}}>
-        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#00e5a0",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
-        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#ff5c5c",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
-      </div>
-      <SVGBarChart data={monthlyData} t={t}/>
-    </div>,
-
-    // ── Card 1: Spending by Category (donut LEFT, list RIGHT) ──
+    // ── Card 0: Spending by Category (donut LEFT, list RIGHT) ──
     <div style={cardBase}>
       <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:12}}>Spending by Category</div>
       {donutSlices.length > 0 ? (
@@ -1388,7 +1393,7 @@ function ChartsSection({ finance, f, t }) {
       )}
     </div>,
 
-    // ── Card 2: Income Trend ──
+    // ── Card 1: Income Trend ──
     <div style={cardBase}>
       <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Income Trend</div>
       <div style={{display:"flex",gap:16,marginBottom:8}}>
@@ -1396,6 +1401,16 @@ function ChartsSection({ finance, f, t }) {
         <div style={legendDot}><span style={{width:18,height:2,background:"#ff5c5c",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
       </div>
       <SVGTrendLine data={monthlyData} t={t}/>
+    </div>,
+
+    // ── Card 2: Monthly Income vs Expenses ──
+    <div style={cardBase}>
+      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Monthly Income vs Expenses</div>
+      <div style={{display:"flex",gap:16,marginBottom:8}}>
+        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#00e5a0",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
+        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#ff5c5c",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
+      </div>
+      <SVGBarChart data={monthlyData} t={t}/>
     </div>,
   ];
 
@@ -1408,7 +1423,7 @@ function ChartsSection({ finance, f, t }) {
         onTouchEnd={onTouchEnd}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
+        onMouseLeave={onMouseLeave}
       >
         <div style={{
           display:"flex",
@@ -1468,7 +1483,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         <span style={{fontSize:13,color:t.subText,fontWeight:400,marginLeft:4}}>{new Date().toLocaleString("default",{month:"long",year:"numeric"})}</span>
       </div>
 
-      {/* ── Analytics carousel — ABOVE summary cards ── */}
+      {/* ── Analytics carousel ── */}
       <ChartsSection finance={finance} f={f} t={t}/>
 
       {/* ── 4 Summary Cards ── */}
@@ -1642,7 +1657,7 @@ function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates })
   const months=["All",...Array.from(new Set(data.map(i=>i.date?.slice(0,7)).filter(Boolean))).sort().reverse()];
   const filtered=data.filter(i=>(catFilter==="All"||i.category===catFilter)&&(mFilter==="All"||i.date?.startsWith(mFilter)));
   const filtTotal=filtered.reduce((s,i)=>s+Number(i.amount),0);
-  const pMonth=m=>m==="All"?"All Months":new Date(m+"-01").toLocaleString("default",{month:"short",year:"numeric"});
+  const pMonth=m=>m==="All"?"All":new Date(m+"-01").toLocaleString("default",{month:"short",year:"2-digit"});
   const submit=()=>{
     if(!form.amount) return;
     onAdd({...form,amount:toBase(form.amount,currency,rates),id:Date.now()});
@@ -1662,13 +1677,33 @@ function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates })
         <div style={{display:"flex",gap:10,marginTop:14}}><button onClick={submit} style={{...bSt("#ff5c5c"),display:"flex",alignItems:"center",gap:6}}><Ico name="squareCheck" size={13} color="#ff5c5c"/>Save</button><button onClick={()=>setShow(false)} style={bSt("#4a7fa5")}>Cancel</button></div>
       </FormCard>}
 
-      {/* Month filter — wrapping pills (few items) */}
-      <Pills
-        label={<span style={{display:"flex",alignItems:"center",gap:5}}><Ico name="tag" size={10} color={t.subText}/>Month</span>}
-        values={months} active={mFilter} setActive={setMFilter} color="#00e5a0" pretty={pMonth} t={t}
-      />
+      {/* ── CHANGE 1: Month filter — single-line swipeable scroll (same as category) ── */}
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:10,color:t.subText,marginBottom:6,textTransform:"uppercase",letterSpacing:1,display:"flex",alignItems:"center",gap:4}}>
+          <Ico name="tag" size={10} color={t.subText}/>Month
+        </div>
+        <div style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch",paddingBottom:2}}>
+          {months.map(v=>(
+            <button
+              key={v}
+              onClick={()=>setMFilter(v)}
+              style={{
+                background:mFilter===v?"#00e5a022":"transparent",
+                border:`1px solid ${mFilter===v?"#00e5a080":t.cardBorder}`,
+                color:mFilter===v?"#00e5a0":t.subText,
+                borderRadius:99,
+                padding:"4px 13px",
+                fontSize:12,
+                cursor:"pointer",
+                whiteSpace:"nowrap",
+                flexShrink:0,
+              }}
+            >{pMonth(v)}</button>
+          ))}
+        </div>
+      </div>
 
-      {/* Category filter — SINGLE LINE SWIPEABLE */}
+      {/* Category filter — single-line swipeable scroll */}
       <div style={{marginBottom:14}}>
         <div style={{fontSize:10,color:t.subText,marginBottom:6,textTransform:"uppercase",letterSpacing:1,display:"flex",alignItems:"center",gap:4}}>
           <Ico name="tag" size={10} color={t.subText}/>Category
