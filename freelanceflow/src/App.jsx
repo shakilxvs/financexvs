@@ -10,7 +10,7 @@ import { auth, provider, db } from "./firebase";
 
 // ── Constants ─────────────────────────────────────────────────
 const defaultFinance = { income:[], pending:[], expenses:[], plans:[] };
-const EXPENSE_CATS = ["Food","Transport","Software","Office","Utilities","Entertainment","Other"];
+const EXPENSE_CATS = ["Food & Groceries","Transport","Entertainment","Health & Medicine","Utilities & Bills","Fashion & Clothing","Self Care","Family","Other / Misc"];
 const INCOME_CATS  = ["Project","Salary","Bonus","Retainer","Other"];
 const PLAN_CATS    = ["Equipment","Software","Travel","Education","Marketing","Office","Other"];
 
@@ -550,7 +550,7 @@ export default function App() {
   const completePlan=(id,completionDate)=>{
     const plan=finance.plans.find(p=>p.id===id);
     if(!plan) return;
-    setFinance(d=>({...d,plans:d.plans.map(p=>p.id===id?{...p,completed:true,completionDate}:p),expenses:[{id:Date.now(),category:plan.category||"Other",amount:plan.budget,date:completionDate,note:"From plan: "+plan.title},...d.expenses]}));
+    setFinance(d=>({...d,plans:d.plans.map(p=>p.id===id?{...p,completed:true,completionDate}:p),expenses:[{id:Date.now(),category:plan.category||"Other / Misc",amount:plan.budget,date:completionDate,note:"From plan: "+plan.title},...d.expenses]}));
   };
 
   const totalIncome   = finance.income.reduce((s,i)=>s+Number(i.amount),0);
@@ -1163,11 +1163,10 @@ function SettingsPage({ settings, setSetting, t, installPrompt, setInstallPrompt
   );
 }
 
-// ── PURE SVG CHART COMPONENTS (zero external deps) ────────────
+// ── PURE SVG CHART COMPONENTS ─────────────────────────────────
 
-// Bar chart: monthly income vs expenses
 function SVGBarChart({ data, t }) {
-  const W = 340, H = 170, PL = 10, PR = 10, PT = 12, PB = 26;
+  const W = 340, H = 160, PL = 10, PR = 10, PT = 10, PB = 24;
   const chartW = W - PL - PR;
   const chartH = H - PT - PB;
   const maxVal = Math.max(...data.map(d => Math.max(d.income, d.expenses)), 1);
@@ -1192,7 +1191,7 @@ function SVGBarChart({ data, t }) {
           <g key={i}>
             <rect x={cx - barW - 1} y={PT + chartH - incH} width={barW} height={incH} fill="#00e5a0" fillOpacity={0.85} rx={3}/>
             <rect x={cx + 1}        y={PT + chartH - expH} width={barW} height={expH} fill="#ff5c5c" fillOpacity={0.85} rx={3}/>
-            <text x={cx} y={H - 8} textAnchor="middle" fontSize={9} fill={t.subText}>{d.label}</text>
+            <text x={cx} y={H - 7} textAnchor="middle" fontSize={9} fill={t.subText}>{d.label}</text>
           </g>
         );
       })}
@@ -1200,15 +1199,18 @@ function SVGBarChart({ data, t }) {
   );
 }
 
-// Donut chart: expense categories
-function SVGDonut({ slices, t }) {
-  const SIZE = 130, cx = 65, cy = 65, R = 48, r = 30;
+// Donut chart — accepts optional size prop
+function SVGDonut({ slices, t, size=130 }) {
+  const SIZE = size;
+  const cx = SIZE / 2, cy = SIZE / 2;
+  const R = SIZE * 0.369; // ~48 at default 130
+  const r = SIZE * 0.231; // ~30 at default 130
+
   if (!slices || slices.length === 0) return null;
 
-  // Handle single-slice edge case (full circle)
   if (slices.length === 1) {
     return (
-      <svg viewBox={"0 0 " + SIZE + " " + SIZE} style={{width:SIZE,height:SIZE,display:"block",margin:"0 auto"}}>
+      <svg viewBox={"0 0 " + SIZE + " " + SIZE} style={{width:SIZE,height:SIZE,display:"block",flexShrink:0}}>
         <circle cx={cx} cy={cy} r={R} fill={slices[0].color} fillOpacity={0.85} stroke={t.sectionBg} strokeWidth={2}/>
         <circle cx={cx} cy={cy} r={r} fill={t.sectionBg}/>
       </svg>
@@ -1231,7 +1233,7 @@ function SVGDonut({ slices, t }) {
   });
 
   return (
-    <svg viewBox={"0 0 " + SIZE + " " + SIZE} style={{width:SIZE,height:SIZE,display:"block",margin:"0 auto"}}>
+    <svg viewBox={"0 0 " + SIZE + " " + SIZE} style={{width:SIZE,height:SIZE,display:"block",flexShrink:0}}>
       {paths.map((p, i) => (
         <path key={i} d={p.d} fill={p.color} fillOpacity={0.85} stroke={t.sectionBg} strokeWidth={1.5}/>
       ))}
@@ -1240,9 +1242,8 @@ function SVGDonut({ slices, t }) {
   );
 }
 
-// Trend line: income + expenses over months
 function SVGTrendLine({ data, t }) {
-  const W = 340, H = 140, PL = 10, PR = 10, PT = 12, PB = 26;
+  const W = 340, H = 130, PL = 10, PR = 10, PT = 10, PB = 24;
   const chartW = W - PL - PR;
   const chartH = H - PT - PB;
   const n = data.length;
@@ -1274,30 +1275,29 @@ function SVGTrendLine({ data, t }) {
         />
       ))}
       <line x1={PL} y1={PT + chartH} x2={W - PR} y2={PT + chartH} stroke={t.sectionBorder} strokeWidth={1}/>
-
       {n > 1 && <path d={areaStr(incPts)} fill="#00e5a0" fillOpacity={0.1}/>}
       {n > 1 && <path d={areaStr(expPts)} fill="#ff5c5c" fillOpacity={0.1}/>}
       {n > 1 && <polyline points={polyStr(incPts)} fill="none" stroke="#00e5a0" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>}
       {n > 1 && <polyline points={polyStr(expPts)} fill="none" stroke="#ff5c5c" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>}
-
       {incPts.map((p, i) => <circle key={"i"+i} cx={p.x} cy={p.y} r={3} fill="#00e5a0"/>)}
       {expPts.map((p, i) => <circle key={"e"+i} cx={p.x} cy={p.y} r={3} fill="#ff5c5c"/>)}
-
       {data.map((d, i) => (
-        <text key={i} x={px(i)} y={H - 8} textAnchor="middle" fontSize={9} fill={t.subText}>{d.label}</text>
+        <text key={i} x={px(i)} y={H - 7} textAnchor="middle" fontSize={9} fill={t.subText}>{d.label}</text>
       ))}
     </svg>
   );
 }
 
-// Charts section — rendered inside Dashboard
-const CAT_COLORS = ["#00e5a0","#4d96ff","#f0a500","#ff5c5c","#c084fc","#fbbf24","#94e2cd"];
+// ── ANALYTICS SECTION — swipeable carousel ────────────────────
+const CAT_COLORS = ["#00e5a0","#4d96ff","#f0a500","#ff5c5c","#c084fc","#fbbf24","#94e2cd","#f97316","#a78bfa"];
 
 function ChartsSection({ finance, f, t }) {
-  const hasAnyData = finance.income.length > 0 || finance.expenses.length > 0;
-  if (!hasAnyData) return null;
+  const isMobile = useIsMobile();
+  const [activeIdx, setActiveIdx] = useState(0);
+  const touchStartX = useRef(null);
+  const mouseStartX = useRef(null);
 
-  // Build last-6-months data
+  // Build last-6-months data (hooks must come before any early return)
   const monthKeys = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date();
@@ -1310,71 +1310,141 @@ function ChartsSection({ finance, f, t }) {
     expenses: finance.expenses.filter(x => x.date && x.date.startsWith(m)).reduce((s, x) => s + Number(x.amount), 0),
   }));
 
-  // Expense category breakdown
   const catMap = {};
   finance.expenses.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + Number(e.amount); });
-  const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
   const catTotal   = catEntries.reduce((s, [, v]) => s + v, 0);
   const donutSlices = catEntries.map(([cat, val], i) => ({
     cat, val, pct: val / (catTotal || 1), color: CAT_COLORS[i % CAT_COLORS.length],
   }));
 
-  const legendStyle = {
-    display:"flex", alignItems:"center", gap:7, fontSize:11, minWidth:0,
+  const hasAnyData = finance.income.length > 0 || finance.expenses.length > 0;
+  if (!hasAnyData) return null;
+
+  // Touch / mouse swipe handlers
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      setActiveIdx(i => diff > 0 ? Math.min(2, i + 1) : Math.max(0, i - 1));
+    }
+    touchStartX.current = null;
+  };
+  const onMouseDown  = (e) => { mouseStartX.current = e.clientX; };
+  const onMouseUp    = (e) => {
+    if (mouseStartX.current === null) return;
+    const diff = mouseStartX.current - e.clientX;
+    if (Math.abs(diff) > 40) {
+      setActiveIdx(i => diff > 0 ? Math.min(2, i + 1) : Math.max(0, i - 1));
+    }
+    mouseStartX.current = null;
   };
 
+  const legendDot = { display:"flex", alignItems:"center", gap:6, fontSize:11 };
+  const donutSize = isMobile ? 88 : 108;
+
+  // Shared card base style
+  const cardBase = {
+    background: t.sectionBg,
+    border: `1px solid ${t.sectionBorder}`,
+    borderRadius: 18,
+    padding: "16px 16px 14px",
+    boxSizing: "border-box",
+    width: "100%",
+  };
+
+  const cards = [
+    // ── Card 0: Monthly Income vs Expenses ──
+    <div style={cardBase}>
+      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Monthly Income vs Expenses</div>
+      <div style={{display:"flex",gap:16,marginBottom:8}}>
+        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#00e5a0",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
+        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#ff5c5c",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
+      </div>
+      <SVGBarChart data={monthlyData} t={t}/>
+    </div>,
+
+    // ── Card 1: Spending by Category (donut LEFT, list RIGHT) ──
+    <div style={cardBase}>
+      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:12}}>Spending by Category</div>
+      {donutSlices.length > 0 ? (
+        <div style={{display:"flex",gap:14,alignItems:"center"}}>
+          {/* Donut left */}
+          <SVGDonut slices={donutSlices} t={t} size={donutSize}/>
+          {/* Category list right */}
+          <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:isMobile?5:6}}>
+            {donutSlices.map((s) => (
+              <div key={s.cat} style={{display:"flex",alignItems:"center",gap:6}}>
+                <span style={{width:7,height:7,borderRadius:2,background:s.color,flexShrink:0,display:"inline-block"}}/>
+                <span style={{color:t.subText,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:isMobile?10:11}}>{s.cat}</span>
+                <span style={{color:t.text,fontWeight:700,flexShrink:0,fontSize:isMobile?10:11}}>{Math.round(s.pct*100)}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{color:t.subText,fontSize:12,textAlign:"center",padding:"32px 0"}}>No expense data yet</div>
+      )}
+    </div>,
+
+    // ── Card 2: Income Trend ──
+    <div style={cardBase}>
+      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Income Trend</div>
+      <div style={{display:"flex",gap:16,marginBottom:8}}>
+        <div style={legendDot}><span style={{width:18,height:2,background:"#00e5a0",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
+        <div style={legendDot}><span style={{width:18,height:2,background:"#ff5c5c",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
+      </div>
+      <SVGTrendLine data={monthlyData} t={t}/>
+    </div>,
+  ];
+
   return (
-    <div style={{marginTop:16}}>
-      {/* Section header */}
-      <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8,color:t.text}}>
-        <Ico name="chartLine" size={15} color="#4d96ff"/>
-        Analytics
-      </div>
-
-      {/* ── Bar Chart ── */}
-      <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:"18px 16px",marginBottom:12}}>
-        <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:6}}>Monthly Income vs Expenses</div>
-        <div style={{display:"flex",gap:16,marginBottom:14}}>
-          <div style={legendStyle}><span style={{width:10,height:10,borderRadius:2,background:"#00e5a0",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
-          <div style={legendStyle}><span style={{width:10,height:10,borderRadius:2,background:"#ff5c5c",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
-        </div>
-        <SVGBarChart data={monthlyData} t={t}/>
-      </div>
-
-      {/* ── Donut + Trend side-by-side ── */}
-      <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-
-        {/* Donut */}
-        {donutSlices.length > 0 && (
-          <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:"18px 16px",flex:"1 1 200px",minWidth:0}}>
-            <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:14}}>Spending by Category</div>
-            <SVGDonut slices={donutSlices} t={t}/>
-            <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:6}}>
-              {donutSlices.map((s, i) => (
-                <div key={s.cat} style={{display:"flex",alignItems:"center",gap:8,fontSize:11}}>
-                  <span style={{width:8,height:8,borderRadius:2,background:s.color,flexShrink:0,display:"inline-block"}}/>
-                  <span style={{color:t.subText,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.cat}</span>
-                  <span style={{color:t.text,fontWeight:700,flexShrink:0}}>{Math.round(s.pct * 100)}%</span>
-                </div>
-              ))}
+    <div style={{marginBottom:16}}>
+      {/* Swipeable container */}
+      <div
+        style={{overflow:"hidden",cursor:"grab",userSelect:"none",WebkitUserSelect:"none"}}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+      >
+        <div style={{
+          display:"flex",
+          transform:`translateX(${-activeIdx * 100}%)`,
+          transition:"transform 0.35s cubic-bezier(0.4,0,0.2,1)",
+          willChange:"transform",
+        }}>
+          {cards.map((card, i) => (
+            <div key={i} style={{minWidth:"100%",boxSizing:"border-box"}}>
+              {card}
             </div>
-          </div>
-        )}
-
-        {/* Trend Line */}
-        <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:"18px 16px",flex:"1 1 200px",minWidth:0}}>
-          <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:6}}>Income Trend</div>
-          <div style={{display:"flex",gap:16,marginBottom:14}}>
-            <div style={legendStyle}><span style={{width:18,height:2,background:"#00e5a0",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
-            <div style={legendStyle}><span style={{width:18,height:2,background:"#ff5c5c",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
-          </div>
-          <SVGTrendLine data={monthlyData} t={t}/>
+          ))}
         </div>
+      </div>
 
+      {/* Pagination dots */}
+      <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:8,marginTop:10}}>
+        {[0,1,2].map(i => (
+          <div
+            key={i}
+            onClick={() => setActiveIdx(i)}
+            style={{
+              width:7,height:7,borderRadius:"50%",
+              background:"#00e5a0",
+              opacity: i === activeIdx ? 1 : 0.25,
+              cursor:"pointer",
+              transition:"opacity 0.2s",
+              flexShrink:0,
+            }}
+          />
+        ))}
       </div>
     </div>
   );
 }
+
 
 // ── DASHBOARD ─────────────────────────────────────────────────
 function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, finance, fname, f, t }) {
@@ -1391,12 +1461,17 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
 
   return (
     <div>
-      <div style={{fontSize:24,fontWeight:800,marginBottom:18,marginTop:6,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+      {/* Greeting */}
+      <div style={{fontSize:24,fontWeight:800,marginBottom:14,marginTop:6,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
         <span style={{fontSize:26}}>👋</span>
         Hey, {fname}!
         <span style={{fontSize:13,color:t.subText,fontWeight:400,marginLeft:4}}>{new Date().toLocaleString("default",{month:"long",year:"numeric"})}</span>
       </div>
 
+      {/* ── Analytics carousel — ABOVE summary cards ── */}
+      <ChartsSection finance={finance} f={f} t={t}/>
+
+      {/* ── 4 Summary Cards ── */}
       <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:16}}>
         {cards.map(c=>{
           const fmtStr = f(c.value);
@@ -1451,9 +1526,6 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
           </div>
         ))}
       </div>
-
-      {/* ── Analytics Charts ── */}
-      <ChartsSection finance={finance} f={f} t={t}/>
     </div>
   );
 }
@@ -1561,7 +1633,7 @@ function PendingTab({ data, onAdd, onMarkPaid, onUpdate, onDelete, onOpenInvoice
 
 // ── EXPENSES TAB ──────────────────────────────────────────────
 function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates }) {
-  const [form,setForm]=useState({category:"Food",amount:"",date:today(),note:""});
+  const [form,setForm]=useState({category:"Food & Groceries",amount:"",date:today(),note:""});
   const [show,setShow]=useState(false);
   const [catFilter,setCatFilter]=useState("All");
   const [mFilter,setMFilter]=useState("All");
@@ -1574,7 +1646,7 @@ function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates })
   const submit=()=>{
     if(!form.amount) return;
     onAdd({...form,amount:toBase(form.amount,currency,rates),id:Date.now()});
-    setForm({category:"Food",amount:"",date:today(),note:""});setShow(false);
+    setForm({category:"Food & Groceries",amount:"",date:today(),note:""});setShow(false);
   };
   return (
     <div>
@@ -1589,8 +1661,39 @@ function ExpensesTab({ data, onAdd, onUpdate, onDelete, f, t, currency, rates })
         <FR label="Note" t={t}><input style={iSt(t)} value={form.note} onChange={e=>setForm(v=>({...v,note:e.target.value}))} placeholder="e.g. Lunch with client"/></FR>
         <div style={{display:"flex",gap:10,marginTop:14}}><button onClick={submit} style={{...bSt("#ff5c5c"),display:"flex",alignItems:"center",gap:6}}><Ico name="squareCheck" size={13} color="#ff5c5c"/>Save</button><button onClick={()=>setShow(false)} style={bSt("#4a7fa5")}>Cancel</button></div>
       </FormCard>}
-      <Pills label={<span style={{display:"flex",alignItems:"center",gap:5}}><Ico name="tag" size={10} color={t.subText}/>Month</span>} values={months} active={mFilter} setActive={setMFilter} color="#00e5a0" pretty={pMonth} t={t}/>
-      <Pills label={<span style={{display:"flex",alignItems:"center",gap:5}}><Ico name="tag" size={10} color={t.subText}/>Category</span>} values={["All",...EXPENSE_CATS]} active={catFilter} setActive={setCatFilter} color="#ff5c5c" t={t}/>
+
+      {/* Month filter — wrapping pills (few items) */}
+      <Pills
+        label={<span style={{display:"flex",alignItems:"center",gap:5}}><Ico name="tag" size={10} color={t.subText}/>Month</span>}
+        values={months} active={mFilter} setActive={setMFilter} color="#00e5a0" pretty={pMonth} t={t}
+      />
+
+      {/* Category filter — SINGLE LINE SWIPEABLE */}
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:10,color:t.subText,marginBottom:6,textTransform:"uppercase",letterSpacing:1,display:"flex",alignItems:"center",gap:4}}>
+          <Ico name="tag" size={10} color={t.subText}/>Category
+        </div>
+        <div style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch",paddingBottom:2}}>
+          {["All",...EXPENSE_CATS].map(v=>(
+            <button
+              key={v}
+              onClick={()=>setCatFilter(v)}
+              style={{
+                background:catFilter===v?"#ff5c5c22":"transparent",
+                border:`1px solid ${catFilter===v?"#ff5c5c80":t.cardBorder}`,
+                color:catFilter===v?"#ff5c5c":t.subText,
+                borderRadius:99,
+                padding:"4px 13px",
+                fontSize:12,
+                cursor:"pointer",
+                whiteSpace:"nowrap",
+                flexShrink:0,
+              }}
+            >{v}</button>
+          ))}
+        </div>
+      </div>
+
       {filtered.length>0&&<div style={{fontSize:13,color:"#ff5c5c",marginBottom:12,fontWeight:700}}>Showing {filtered.length} · Total: {f(filtTotal)}</div>}
       {filtered.length===0&&<ES t={t} text="No expenses here. Great job! 🎉"/>}
       {filtered.map(item=>(
