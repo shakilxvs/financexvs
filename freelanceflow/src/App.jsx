@@ -673,7 +673,16 @@ export default function App() {
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <Ico name="wallet" size={18} color="#00e5a0"/>
                   <span style={{fontSize:16,fontWeight:800,color:"#00e5a0",letterSpacing:"-0.5px"}}>Finance Flow</span>
-                  {isOffline&&<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffa500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" title="No internet"><line x1="2" y1="2" x2="22" y2="22"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.5a9 9 0 0 1 5.5-2.5"/><path d="M19 12.5a9 9 0 0 0-2.5-1.5"/><path d="M10.5 20a1.5 1.5 0 0 1 3 0"/><path d="M2 8.5A13 13 0 0 1 12 5c1.7 0 3.4.3 4.9.9"/></svg>}
+                  {isOffline&&<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+  <circle cx="12" cy="12" r="10" fill="none" stroke="#EF4444" strokeWidth="2.5"/>
+  <g fill="none" stroke="#FACC15" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6.2 10.2a8.2 8.2 0 0 1 11.6 0"/>
+    <path d="M8.4 12.6a5.2 5.2 0 0 1 7.2 0"/>
+    <path d="M10.5 15a2.3 2.3 0 0 1 3 0"/>
+  </g>
+  <circle cx="12" cy="18" r="1.4" fill="#FACC15"/>
+  <path d="M7.2 6.8L16.8 17.2" fill="none" stroke="#EF4444" strokeWidth="2.8" strokeLinecap="round"/>
+</svg>}
                   <div style={{transform:"scale(0.88)",transformOrigin:"left center"}}><CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading}/></div>
                 </div>
                 <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} t={t}/>
@@ -692,7 +701,16 @@ export default function App() {
                 <Ico name="wallet" size={20} color="#00e5a0"/>
                 <div>
                   <div style={{fontSize:16,fontWeight:800,color:"#00e5a0",letterSpacing:"-0.5px",lineHeight:1.2}}>Finance Flow</div>
-                  <div style={{fontSize:10,color:t.subText,display:"flex",alignItems:"center",gap:4}}>{isOffline?<><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#ffa500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.5a9 9 0 0 1 5.5-2.5"/><path d="M19 12.5a9 9 0 0 0-2.5-1.5"/><path d="M10.5 20a1.5 1.5 0 0 1 3 0"/><path d="M2 8.5A13 13 0 0 1 12 5c1.7 0 3.4.3 4.9.9"/></svg><span style={{color:"#ffa500"}}>Offline</span></>:"Personal finance manager"}</div>
+                  <div style={{fontSize:10,color:t.subText,display:"flex",alignItems:"center",gap:4}}>{isOffline?<><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+  <circle cx="12" cy="12" r="10" fill="none" stroke="#EF4444" strokeWidth="2.5"/>
+  <g fill="none" stroke="#FACC15" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6.2 10.2a8.2 8.2 0 0 1 11.6 0"/>
+    <path d="M8.4 12.6a5.2 5.2 0 0 1 7.2 0"/>
+    <path d="M10.5 15a2.3 2.3 0 0 1 3 0"/>
+  </g>
+  <circle cx="12" cy="18" r="1.4" fill="#FACC15"/>
+  <path d="M7.2 6.8L16.8 17.2" fill="none" stroke="#EF4444" strokeWidth="2.8" strokeLinecap="round"/>
+</svg><span style={{color:"#EF4444"}}>Offline</span></>:"Personal finance manager"}</div>
                 </div>
                 <CurrencyDropdown currency={currency} setCurrency={c=>setSetting("currency",c)} rates={rates} ratesLoading={ratesLoading}/>
               </div>
