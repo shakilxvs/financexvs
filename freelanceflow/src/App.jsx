@@ -1210,10 +1210,12 @@ function SVGDonut({ slices, t, size=130 }) {
   if (!slices || slices.length === 0) return null;
 
   if (slices.length === 1) {
+    // Use stroke-based ring so the hole is truly transparent (not background-dependent)
+    const midR = (R + r) / 2;
+    const strokeW = R - r;
     return (
       <svg viewBox={"0 0 " + SIZE + " " + SIZE} style={{width:SIZE,height:SIZE,display:"block",flexShrink:0}}>
-        <circle cx={cx} cy={cy} r={R} fill={slices[0].color} fillOpacity={0.85} stroke={t.sectionBg} strokeWidth={2}/>
-        <circle cx={cx} cy={cy} r={r} fill={t.sectionBg}/>
+        <circle cx={cx} cy={cy} r={midR} fill="none" stroke={slices[0].color} strokeWidth={strokeW} strokeOpacity={0.85}/>
       </svg>
     );
   }
@@ -1365,7 +1367,7 @@ function ChartsSection({ finance, f, t }) {
   const legendDot = { display:"flex", alignItems:"center", gap:6, fontSize:11 };
 
   // Donut size scales with card height
-  const donutSize = isMobile ? 90 : 140;
+  const donutSize = isMobile ? 180 : 280;
 
   // Fixed pixel height so all three cards are exactly the same size
   const CARD_H = isMobile ? 215 : 300;
@@ -1386,7 +1388,27 @@ function ChartsSection({ finance, f, t }) {
   const chartWrap = { flex: 1, minHeight: 0, overflow: "hidden" };
 
   const cards = [
-    // ── Card 0: Spending by Category ──
+    // ── Card 0: Income Trend ──
+    <div style={cardBase}>
+      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Income Trend</div>
+      <div style={{display:"flex",gap:16,marginBottom:8}}>
+        <div style={legendDot}><span style={{width:18,height:2,background:"#00e5a0",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
+        <div style={legendDot}><span style={{width:18,height:2,background:"#ff5c5c",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
+      </div>
+      <div style={chartWrap}><SVGTrendLine data={monthlyData} t={t}/></div>
+    </div>,
+
+    // ── Card 1: Monthly Income vs Expenses ──
+    <div style={cardBase}>
+      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Monthly Income vs Expenses</div>
+      <div style={{display:"flex",gap:16,marginBottom:8}}>
+        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#00e5a0",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
+        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#ff5c5c",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
+      </div>
+      <div style={chartWrap}><SVGBarChart data={monthlyData} t={t}/></div>
+    </div>,
+
+    // ── Card 2: Spending by Category ──
     <div style={cardBase}>
       <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:12}}>Spending by Category</div>
       {donutSlices.length > 0 ? (
@@ -1409,26 +1431,6 @@ function ChartsSection({ finance, f, t }) {
       ) : (
         <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:t.subText,fontSize:12}}>No expense data yet</div>
       )}
-    </div>,
-
-    // ── Card 1: Income Trend ──
-    <div style={cardBase}>
-      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Income Trend</div>
-      <div style={{display:"flex",gap:16,marginBottom:8}}>
-        <div style={legendDot}><span style={{width:18,height:2,background:"#00e5a0",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
-        <div style={legendDot}><span style={{width:18,height:2,background:"#ff5c5c",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
-      </div>
-      <div style={chartWrap}><SVGTrendLine data={monthlyData} t={t}/></div>
-    </div>,
-
-    // ── Card 2: Monthly Income vs Expenses ──
-    <div style={cardBase}>
-      <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:8}}>Monthly Income vs Expenses</div>
-      <div style={{display:"flex",gap:16,marginBottom:8}}>
-        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#00e5a0",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
-        <div style={legendDot}><span style={{width:10,height:10,borderRadius:2,background:"#ff5c5c",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
-      </div>
-      <div style={chartWrap}><SVGBarChart data={monthlyData} t={t}/></div>
     </div>,
   ];
 
