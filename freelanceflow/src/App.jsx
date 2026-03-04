@@ -1016,7 +1016,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             </div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
               <span>${curLvl.minUSD.toLocaleString()}</span>
-              {nextLvl&&<span>{Math.max(0,progress).toFixed(1)}% → ${nextLvl.minUSD.toLocaleString()}</span>}
+              {nextLvl&&<span>{(Math.floor(Math.max(0,progress)*10)/10).toFixed(1)}% → ${nextLvl.minUSD.toLocaleString()}</span>}
               {!nextLvl&&<span style={{color:curLvl.color,fontWeight:700}}>🏆 Max Level!</span>}
             </div>
             <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total Value: <span style={{color:curLvl.color,fontWeight:700}}>{f(totalSavings)}</span></div>
