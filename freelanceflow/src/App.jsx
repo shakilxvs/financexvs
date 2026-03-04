@@ -1016,7 +1016,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             </div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
               <span>${curLvl.minUSD.toLocaleString()}</span>
-              {nextLvl&&<span>{Math.max(0,progress).toFixed(1)}% → ${nextLvl.minUSD.toLocaleString()}</span>}
+              {nextLvl&&<span>→ ${nextLvl.minUSD.toLocaleString()}</span>}
               {!nextLvl&&<span style={{color:curLvl.color,fontWeight:700}}>🏆 Max Level!</span>}
             </div>
             <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total Value: <span style={{color:curLvl.color,fontWeight:700}}>{f(totalSavings)}</span></div>
@@ -1036,12 +1036,12 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
               </div>
             </div>
             <div style={{background:t.sectionBorder,borderRadius:99,height:10,overflow:"hidden",marginBottom:6}}>
-              <div style={{width:Math.min(100,(totalIncome/totalExpenses)*100)+"%",background:"#ff5c5c",height:"100%",borderRadius:99,transition:"width 0.8s"}}/>
-            </div>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
-              <span>{f(0)}</span>
-              <span style={{color:"#ff5c5c",fontWeight:600}}>{((totalIncome/totalExpenses)*100).toFixed(1)}% → {f(Math.abs(totalSavings))}</span>
-            </div>
+  <div style={{width:Math.min(100, totalExpenses > 0 ? (totalIncome / totalExpenses) * 100 : 0)+"%",background:"#ff5c5c",height:"100%",borderRadius:99,transition:"width 0.8s"}}/>
+</div>
+<div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
+  <span>{f(0)}</span>
+  <span style={{color:"#ff5c5c",fontWeight:600}}>{f(totalExpenses)}</span>
+</div>
             <div style={{fontSize:11,color:t.subText,marginTop:8}}>Earn <span style={{color:"#ff5c5c",fontWeight:700}}>{f(Math.abs(totalSavings))}</span> more to be debt-free</div>
           </div>
         )}
