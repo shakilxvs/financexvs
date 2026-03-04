@@ -162,7 +162,6 @@ function isAndroidMobile() {
   return /Android/i.test(navigator.userAgent) && /Mobile/i.test(navigator.userAgent);
 }
 
-// ── Dynamic font size — only shrinks when number is genuinely huge ──
 function amtFontSize(str) {
   const l = (str||"").length;
   if (l > 22) return 11;
@@ -171,7 +170,6 @@ function amtFontSize(str) {
   return 18;
 }
 
-// ── Dynamic flex for dashboard cards ─────────────────────────
 function cardFlex(formattedValue) {
   const l = (formattedValue||"").length;
   if (l > 17) return "3 1 200px";
@@ -203,7 +201,7 @@ async function saveToCloud(uid, finance, settings, profile, workProfile) {
 
 
 // ── User Avatar ───────────────────────────────────────────────
-function UserAvatar({ photoURL, size=30, t }) {
+function UserAvatar({ photoURL, size=30 }) {
   if (photoURL) return <img src={photoURL} alt="" style={{width:size,height:size,borderRadius:"50%",border:"2px solid rgba(0,229,160,0.3)",flexShrink:0,objectFit:"cover"}} />;
   return (
     <div style={{width:size,height:size,borderRadius:"50%",background:"white",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:"2px solid rgba(0,229,160,0.3)"}}>
@@ -495,7 +493,6 @@ export default function App() {
   const fname    = firstName(dispName);
   const f        = n=>fmtAmt(n,currency,rates);
 
-  // Live exchange rates
   useEffect(()=>{
     const fetchRates=async()=>{
       try{
@@ -510,7 +507,6 @@ export default function App() {
     return()=>clearInterval(iv);
   },[]);
 
-  // Auth listener
   useEffect(()=>{
     const unsub=onAuthStateChanged(auth,async u=>{
       setUser(u);
@@ -526,14 +522,12 @@ export default function App() {
     return unsub;
   },[]);
 
-  // Auto-save
   useEffect(()=>{
     if(!user) return;
     const timer=setTimeout(()=>saveToCloud(user.uid,finance,settings,profile,workProfile),800);
     return()=>clearTimeout(timer);
   },[finance,settings,profile,workProfile,user]);
 
-  // PWA install prompt
   useEffect(()=>{
     const h=e=>{e.preventDefault();setInstallPrompt(e);};
     window.addEventListener("beforeinstallprompt",h);
@@ -544,7 +538,6 @@ export default function App() {
   const logout = ()=>{ signOut(auth); setFinance(defaultFinance); setProfile({customName:""}); setWorkProfile({...defaultWorkProfile}); setSettings({currency:"BDT",theme:"dark"}); setTab("dashboard"); setPage("main"); };
   const setSetting = (key,val)=>setSettings(s=>({...s,[key]:val}));
 
-  // Data ops
   const addItem       = (type,item)      => setFinance(d=>({...d,[type]:[item,...d[type]]}));
   const updateItem    = (type,id,fields) => setFinance(d=>({...d,[type]:d[type].map(i=>i.id===id?{...i,...fields}:i)}));
   const deleteItem    = (type,id)        => setFinance(d=>({...d,[type]:d[type].filter(i=>i.id!==id)}));
@@ -605,7 +598,7 @@ export default function App() {
                 <div style={{background:"rgba(0,229,160,0.1)",border:"1px solid rgba(0,229,160,0.3)",borderRadius:10,padding:"5px 11px",fontSize:12,fontWeight:700,color:"#00e5a0"}}>Net: {f(netBalance)}</div>
                 <div style={{display:"flex",alignItems:"center",gap:7}}>
                   <span style={{fontSize:12,color:t.dimText}}>{fname}</span>
-                  <UserAvatar photoURL={user.photoURL} size={28} t={t}/>
+                  <UserAvatar photoURL={user.photoURL} size={28}/>
                 </div>
               </div>
             </div>
@@ -621,7 +614,7 @@ export default function App() {
               </div>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
                 <div style={{background:"rgba(0,229,160,0.1)",border:"1px solid rgba(0,229,160,0.3)",borderRadius:10,padding:"6px 12px",fontSize:13,fontWeight:700,color:"#00e5a0",whiteSpace:"nowrap"}}>Net: {f(netBalance)}</div>
-                <UserAvatar photoURL={user.photoURL} size={30} t={t}/>
+                <UserAvatar photoURL={user.photoURL} size={30}/>
                 <span style={{fontSize:12,color:t.dimText,maxWidth:72,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fname}</span>
                 <HamburgerMenu onLogout={logout} onProfile={()=>setPage("profile")} onSettings={()=>setPage("settings")} t={t}/>
               </div>
@@ -942,20 +935,15 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
     ? [["Avg. Earning",avgIncome,"#00e5a0"],["Avg. Spending",avgExpenses,"#ff5c5c"],["Avg. Saving",avgSavings,avgSavings>=0?"#00e5a0":"#ff5c5c"]]
     : [["Earning",mIncome,"#00e5a0"],["Spending",mExpenses,"#ff5c5c"],["Saving",mSavings,mSavings>=0?"#00e5a0":"#ff5c5c"]];
 
-  // ── Dynamic grid for summary: mobile is tighter so needs fewer cols ──
   const maxAmtLen = Math.max(...summaryData.map(([,v])=>f(v).length));
-  // Mobile: 3-col only for very short (≤6 chars like "$500"), 2-col up to 14, else 1-col
-  // Desktop: 3-col up to 13 chars, 2-col up to 18, else 1-col
   const summaryCols = isMobile
     ? (maxAmtLen > 14 ? "1fr" : maxAmtLen > 6 ? "1fr 1fr" : "1fr 1fr 1fr")
     : (maxAmtLen > 18 ? "1fr" : maxAmtLen > 13 ? "1fr 1fr" : "1fr 1fr 1fr");
   const summaryTextAlign = summaryCols === "1fr 1fr 1fr" ? "center" : "left";
-  // Font size depends on both length AND how many cols (narrower cols need smaller font)
   const colCount = summaryCols === "1fr 1fr 1fr" ? 3 : summaryCols === "1fr 1fr" ? 2 : 1;
   function summaryFs(str) {
     const l = (str||"").length;
     if (colCount === 3) {
-      // 3-col: very tight on mobile — only used for short numbers
       if (l > 8) return 14; if (l > 6) return 16; return 19;
     } else if (colCount === 2) {
       if (l > 16) return 13; if (l > 12) return 15; if (l > 9) return 17; return 20;
@@ -990,7 +978,6 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
       </div>
       <div style={{maxWidth:640,margin:"20px auto",padding:"0 14px 48px"}}>
 
-        {/* Avatar + Name */}
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:28,textAlign:"center",marginBottom:14}}>
           <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
             {user?.photoURL ? <img src={user.photoURL} style={{width:80,height:80,borderRadius:"50%",border:"3px solid rgba(0,229,160,0.5)",objectFit:"cover"}} alt=""/> : <div style={{width:80,height:80,borderRadius:"50%",background:"white",display:"flex",alignItems:"center",justifyContent:"center",border:"3px solid rgba(0,229,160,0.4)"}}><Ico name="user" size={44} color="#888"/></div>}
@@ -1012,7 +999,6 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           )}
         </div>
 
-        {/* Level */}
         <div style={{background:`${curLvl.color}10`,border:`1px solid ${curLvl.color}30`,borderRadius:20,padding:24,marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
             <span style={{fontSize:36}}>{curLvl.emoji}</span>
@@ -1033,7 +1019,6 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total earned: <span style={{color:curLvl.color,fontWeight:700}}>${totalIncomeUSD.toLocaleString("en-US",{maximumFractionDigits:0})}</span></div>
         </div>
 
-        {/* Earning Summary */}
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:24,marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,gap:8}}>
             <div style={{fontSize:15,fontWeight:700,color:t.text,flexShrink:0}}>Earning Summary</div>
@@ -1052,7 +1037,6 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
           )}
           {summaryMode==="average"&&<div style={{fontSize:11,color:t.subText,marginBottom:12}}>Based on {monthsCount} month{monthsCount!==1?"s":""} with transactions</div>}
 
-          {/* ── Dynamic grid: 3-col normal, 2-col medium, 1-col large numbers ── */}
           <div style={{display:"grid",gridTemplateColumns:summaryCols,gap:10}}>
             {summaryData.map(([l,v,c])=>{
               const fmtStr = f(v);
@@ -1060,23 +1044,13 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
               return (
                 <div key={l} style={{background:`${c}10`,border:`1px solid ${c}30`,borderRadius:14,padding:"14px 12px",textAlign:summaryTextAlign,minWidth:0,overflow:"hidden"}}>
                   <div style={{fontSize:10,color:t.subText,textTransform:"uppercase",letterSpacing:0.8,lineHeight:1.4}}>{l}</div>
-                  <div style={{
-                    fontSize:fs,
-                    fontWeight:800,
-                    color:c,
-                    marginTop:6,
-                    whiteSpace:"nowrap",
-                    overflow:"hidden",
-                    textOverflow:"ellipsis",
-                    lineHeight:1.3,
-                  }}>{fmtStr}</div>
+                  <div style={{fontSize:fs,fontWeight:800,color:c,marginTop:6,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",lineHeight:1.3}}>{fmtStr}</div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Work Profile */}
         <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:20,padding:24}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:wpEdit?16:12}}>
             <div>
@@ -1189,6 +1163,219 @@ function SettingsPage({ settings, setSetting, t, installPrompt, setInstallPrompt
   );
 }
 
+// ── PURE SVG CHART COMPONENTS (zero external deps) ────────────
+
+// Bar chart: monthly income vs expenses
+function SVGBarChart({ data, t }) {
+  const W = 340, H = 170, PL = 10, PR = 10, PT = 12, PB = 26;
+  const chartW = W - PL - PR;
+  const chartH = H - PT - PB;
+  const maxVal = Math.max(...data.map(d => Math.max(d.income, d.expenses)), 1);
+  const slotW  = chartW / data.length;
+  const barW   = Math.min(20, slotW * 0.33);
+
+  return (
+    <svg viewBox={"0 0 " + W + " " + H} style={{width:"100%",height:"auto",display:"block"}}>
+      {[0.25, 0.5, 0.75, 1].map((r, i) => (
+        <line key={i}
+          x1={PL} y1={PT + chartH - r * chartH}
+          x2={W - PR} y2={PT + chartH - r * chartH}
+          stroke={t.sectionBorder} strokeWidth={0.5} strokeDasharray="3,3"
+        />
+      ))}
+      <line x1={PL} y1={PT + chartH} x2={W - PR} y2={PT + chartH} stroke={t.sectionBorder} strokeWidth={1}/>
+      {data.map((d, i) => {
+        const cx = PL + i * slotW + slotW / 2;
+        const incH = Math.max((d.income  / maxVal) * chartH, d.income  > 0 ? 2 : 0);
+        const expH = Math.max((d.expenses/ maxVal) * chartH, d.expenses> 0 ? 2 : 0);
+        return (
+          <g key={i}>
+            <rect x={cx - barW - 1} y={PT + chartH - incH} width={barW} height={incH} fill="#00e5a0" fillOpacity={0.85} rx={3}/>
+            <rect x={cx + 1}        y={PT + chartH - expH} width={barW} height={expH} fill="#ff5c5c" fillOpacity={0.85} rx={3}/>
+            <text x={cx} y={H - 8} textAnchor="middle" fontSize={9} fill={t.subText}>{d.label}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// Donut chart: expense categories
+function SVGDonut({ slices, t }) {
+  const SIZE = 130, cx = 65, cy = 65, R = 48, r = 30;
+  if (!slices || slices.length === 0) return null;
+
+  // Handle single-slice edge case (full circle)
+  if (slices.length === 1) {
+    return (
+      <svg viewBox={"0 0 " + SIZE + " " + SIZE} style={{width:SIZE,height:SIZE,display:"block",margin:"0 auto"}}>
+        <circle cx={cx} cy={cy} r={R} fill={slices[0].color} fillOpacity={0.85} stroke={t.sectionBg} strokeWidth={2}/>
+        <circle cx={cx} cy={cy} r={r} fill={t.sectionBg}/>
+      </svg>
+    );
+  }
+
+  let angle = -Math.PI / 2;
+  const paths = slices.map((s) => {
+    const sweep = s.pct * 2 * Math.PI;
+    const end   = angle + sweep;
+    const large = sweep > Math.PI ? 1 : 0;
+    const x1 = cx + R * Math.cos(angle), y1 = cy + R * Math.sin(angle);
+    const x2 = cx + R * Math.cos(end),   y2 = cy + R * Math.sin(end);
+    const ix1= cx + r * Math.cos(end),   iy1= cy + r * Math.sin(end);
+    const ix2= cx + r * Math.cos(angle), iy2= cy + r * Math.sin(angle);
+    const d  = "M "+x1+" "+y1+" A "+R+" "+R+" 0 "+large+" 1 "+x2+" "+y2
+             + " L "+ix1+" "+iy1+" A "+r+" "+r+" 0 "+large+" 0 "+ix2+" "+iy2+" Z";
+    angle = end;
+    return { d, color: s.color };
+  });
+
+  return (
+    <svg viewBox={"0 0 " + SIZE + " " + SIZE} style={{width:SIZE,height:SIZE,display:"block",margin:"0 auto"}}>
+      {paths.map((p, i) => (
+        <path key={i} d={p.d} fill={p.color} fillOpacity={0.85} stroke={t.sectionBg} strokeWidth={1.5}/>
+      ))}
+      <circle cx={cx} cy={cy} r={r} fill={t.sectionBg}/>
+    </svg>
+  );
+}
+
+// Trend line: income + expenses over months
+function SVGTrendLine({ data, t }) {
+  const W = 340, H = 140, PL = 10, PR = 10, PT = 12, PB = 26;
+  const chartW = W - PL - PR;
+  const chartH = H - PT - PB;
+  const n = data.length;
+  const maxVal = Math.max(...data.map(d => Math.max(d.income, d.expenses)), 1);
+
+  const px = (i) => PL + (n <= 1 ? chartW / 2 : (i / (n - 1)) * chartW);
+  const py = (v) => PT + chartH - (v / maxVal) * chartH;
+
+  const incPts = data.map((d, i) => ({ x: px(i), y: py(d.income) }));
+  const expPts = data.map((d, i) => ({ x: px(i), y: py(d.expenses) }));
+
+  const polyStr = (pts) => pts.map(p => p.x + "," + p.y).join(" ");
+
+  const areaStr = (pts) => {
+    if (pts.length === 0) return "";
+    const base = PT + chartH;
+    return "M " + pts[0].x + " " + base
+      + " " + pts.map(p => "L " + p.x + " " + p.y).join(" ")
+      + " L " + pts[pts.length - 1].x + " " + base + " Z";
+  };
+
+  return (
+    <svg viewBox={"0 0 " + W + " " + H} style={{width:"100%",height:"auto",display:"block"}}>
+      {[0.5, 1].map((r, i) => (
+        <line key={i}
+          x1={PL} y1={PT + chartH - r * chartH}
+          x2={W - PR} y2={PT + chartH - r * chartH}
+          stroke={t.sectionBorder} strokeWidth={0.5} strokeDasharray="3,3"
+        />
+      ))}
+      <line x1={PL} y1={PT + chartH} x2={W - PR} y2={PT + chartH} stroke={t.sectionBorder} strokeWidth={1}/>
+
+      {n > 1 && <path d={areaStr(incPts)} fill="#00e5a0" fillOpacity={0.1}/>}
+      {n > 1 && <path d={areaStr(expPts)} fill="#ff5c5c" fillOpacity={0.1}/>}
+      {n > 1 && <polyline points={polyStr(incPts)} fill="none" stroke="#00e5a0" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>}
+      {n > 1 && <polyline points={polyStr(expPts)} fill="none" stroke="#ff5c5c" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>}
+
+      {incPts.map((p, i) => <circle key={"i"+i} cx={p.x} cy={p.y} r={3} fill="#00e5a0"/>)}
+      {expPts.map((p, i) => <circle key={"e"+i} cx={p.x} cy={p.y} r={3} fill="#ff5c5c"/>)}
+
+      {data.map((d, i) => (
+        <text key={i} x={px(i)} y={H - 8} textAnchor="middle" fontSize={9} fill={t.subText}>{d.label}</text>
+      ))}
+    </svg>
+  );
+}
+
+// Charts section — rendered inside Dashboard
+const CAT_COLORS = ["#00e5a0","#4d96ff","#f0a500","#ff5c5c","#c084fc","#fbbf24","#94e2cd"];
+
+function ChartsSection({ finance, f, t }) {
+  const hasAnyData = finance.income.length > 0 || finance.expenses.length > 0;
+  if (!hasAnyData) return null;
+
+  // Build last-6-months data
+  const monthKeys = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    monthKeys.push(d.toISOString().slice(0, 7));
+  }
+  const monthlyData = monthKeys.map(m => ({
+    label: new Date(m + "-01").toLocaleString("default", { month: "short" }),
+    income:   finance.income.filter(x => x.date && x.date.startsWith(m)).reduce((s, x) => s + Number(x.amount), 0),
+    expenses: finance.expenses.filter(x => x.date && x.date.startsWith(m)).reduce((s, x) => s + Number(x.amount), 0),
+  }));
+
+  // Expense category breakdown
+  const catMap = {};
+  finance.expenses.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + Number(e.amount); });
+  const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  const catTotal   = catEntries.reduce((s, [, v]) => s + v, 0);
+  const donutSlices = catEntries.map(([cat, val], i) => ({
+    cat, val, pct: val / (catTotal || 1), color: CAT_COLORS[i % CAT_COLORS.length],
+  }));
+
+  const legendStyle = {
+    display:"flex", alignItems:"center", gap:7, fontSize:11, minWidth:0,
+  };
+
+  return (
+    <div style={{marginTop:16}}>
+      {/* Section header */}
+      <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8,color:t.text}}>
+        <Ico name="chartLine" size={15} color="#4d96ff"/>
+        Analytics
+      </div>
+
+      {/* ── Bar Chart ── */}
+      <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:"18px 16px",marginBottom:12}}>
+        <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:6}}>Monthly Income vs Expenses</div>
+        <div style={{display:"flex",gap:16,marginBottom:14}}>
+          <div style={legendStyle}><span style={{width:10,height:10,borderRadius:2,background:"#00e5a0",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
+          <div style={legendStyle}><span style={{width:10,height:10,borderRadius:2,background:"#ff5c5c",display:"inline-block",flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
+        </div>
+        <SVGBarChart data={monthlyData} t={t}/>
+      </div>
+
+      {/* ── Donut + Trend side-by-side ── */}
+      <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+
+        {/* Donut */}
+        {donutSlices.length > 0 && (
+          <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:"18px 16px",flex:"1 1 200px",minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:14}}>Spending by Category</div>
+            <SVGDonut slices={donutSlices} t={t}/>
+            <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:6}}>
+              {donutSlices.map((s, i) => (
+                <div key={s.cat} style={{display:"flex",alignItems:"center",gap:8,fontSize:11}}>
+                  <span style={{width:8,height:8,borderRadius:2,background:s.color,flexShrink:0,display:"inline-block"}}/>
+                  <span style={{color:t.subText,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.cat}</span>
+                  <span style={{color:t.text,fontWeight:700,flexShrink:0}}>{Math.round(s.pct * 100)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Trend Line */}
+        <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:"18px 16px",flex:"1 1 200px",minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:700,color:t.text,marginBottom:6}}>Income Trend</div>
+          <div style={{display:"flex",gap:16,marginBottom:14}}>
+            <div style={legendStyle}><span style={{width:18,height:2,background:"#00e5a0",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Income</span></div>
+            <div style={legendStyle}><span style={{width:18,height:2,background:"#ff5c5c",display:"inline-block",borderRadius:1,flexShrink:0}}/><span style={{color:t.subText}}>Expenses</span></div>
+          </div>
+          <SVGTrendLine data={monthlyData} t={t}/>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ── DASHBOARD ─────────────────────────────────────────────────
 function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, monthIncome, monthExpenses, finance, fname, f, t }) {
   const activePlans=(finance.plans||[]).filter(p=>!p.completed).length;
@@ -1210,34 +1397,16 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         <span style={{fontSize:13,color:t.subText,fontWeight:400,marginLeft:4}}>{new Date().toLocaleString("default",{month:"long",year:"numeric"})}</span>
       </div>
 
-      {/* ── Dynamic flex: cards grow wider when number is long ── */}
       <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:16}}>
         {cards.map(c=>{
           const fmtStr = f(c.value);
           const fs = amtFontSize(fmtStr);
           const flexVal = cardFlex(fmtStr);
           return (
-            <div key={c.label} style={{
-              background:`${c.color}12`,
-              border:`1px solid ${c.color}30`,
-              borderRadius:18,
-              padding:"18px 16px",
-              flex:flexVal,
-              minWidth:130,
-              boxSizing:"border-box",
-              overflow:"hidden",
-            }}>
+            <div key={c.label} style={{background:`${c.color}12`,border:`1px solid ${c.color}30`,borderRadius:18,padding:"18px 16px",flex:flexVal,minWidth:130,boxSizing:"border-box",overflow:"hidden"}}>
               <Ico name={c.icon} size={20} color={c.color}/>
               <div style={{fontSize:10,color:t.subText,marginTop:10,textTransform:"uppercase",letterSpacing:1,lineHeight:1.4}}>{c.label}</div>
-              <div style={{
-                fontSize:fs,
-                fontWeight:800,
-                color:c.color,
-                marginTop:4,
-                wordBreak:"break-word",
-                overflowWrap:"anywhere",
-                lineHeight:1.25,
-              }}>{fmtStr}</div>
+              <div style={{fontSize:fs,fontWeight:800,color:c.color,marginTop:4,wordBreak:"break-word",overflowWrap:"anywhere",lineHeight:1.25}}>{fmtStr}</div>
             </div>
           );
         })}
@@ -1263,8 +1432,7 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
         </div>}
       </div>
 
-      <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20}}>
-        {/* ── FIXED: clock icon for header, creditCard icon for income items ── */}
+      <div style={{background:t.sectionBg,border:`1px solid ${t.sectionBorder}`,borderRadius:18,padding:20,marginBottom:12}}>
         <div style={{fontSize:15,fontWeight:700,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
           <Ico name="clock" size={15} color="#4a7fa5"/> Recent Transactions
         </div>
@@ -1283,6 +1451,9 @@ function Dashboard({ totalIncome, totalPending, totalExpenses, netBalance, month
           </div>
         ))}
       </div>
+
+      {/* ── Analytics Charts ── */}
+      <ChartsSection finance={finance} f={f} t={t}/>
     </div>
   );
 }
@@ -1537,6 +1708,3 @@ function Pills({label,values,active,setActive,color,pretty,t}){
 }
 const iSt=t=>({width:"100%",background:t.inputBg,border:`1px solid ${t.inputBorder}`,borderRadius:9,color:t.inputText||t.text,padding:"10px 12px",fontSize:14,boxSizing:"border-box",outline:"none"});
 function bSt(color){return {background:`${color}18`,border:`1px solid ${color}60`,color,borderRadius:9,padding:"8px 18px",cursor:"pointer",fontSize:13,fontWeight:700,transition:"all 0.2s"};}
-
-
-
