@@ -925,9 +925,10 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
   const mSavings  = mIncome-mExpenses;
 
   const totalIncomeUSD = totalIncome/(rates?.BDT||110);
-  const curLvl  = getLevel(totalIncomeUSD);
+  const totalNetUSD    = totalSavings/(rates?.BDT||110); // net value for leveling
+  const curLvl  = getLevel(totalSavings>=0 ? totalNetUSD : 0);
   const nextLvl = LEVELS[LEVELS.indexOf(curLvl)+1];
-  const progress = nextLvl ? Math.min(100,((totalIncomeUSD-curLvl.minUSD)/(nextLvl.minUSD-curLvl.minUSD))*100) : 100;
+  const progress = nextLvl ? Math.min(100,((totalNetUSD-curLvl.minUSD)/(nextLvl.minUSD-curLvl.minUSD))*100) : 100;
 
   const summaryData = summaryMode==="alltime"
     ? [["Earning",totalIncome,"#00e5a0"],["Spending",totalExpenses,"#ff5c5c"],["Saving",totalSavings,totalSavings>=0?"#00e5a0":"#ff5c5c"]]
@@ -1000,7 +1001,7 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
         </div>
 
         {totalSavings >= 0 ? (
-          // ── Normal: level progression ──
+          // ── Normal: level progression based on net value ──
           <div style={{background:`${curLvl.color}10`,border:`1px solid ${curLvl.color}30`,borderRadius:20,padding:24,marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
               <span style={{fontSize:36}}>{curLvl.emoji}</span>
@@ -1015,29 +1016,33 @@ function ProfilePage({ user, profile, setProfile, workProfile, setWorkProfile, f
             </div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
               <span>${curLvl.minUSD.toLocaleString()}</span>
-              {nextLvl&&<span>{progress.toFixed(1)}% → ${nextLvl.minUSD.toLocaleString()}</span>}
+              {nextLvl&&<span>{Math.max(0,progress).toFixed(1)}% → ${nextLvl.minUSD.toLocaleString()}</span>}
               {!nextLvl&&<span style={{color:curLvl.color,fontWeight:700}}>🏆 Max Level!</span>}
             </div>
-            <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total earned: <span style={{color:curLvl.color,fontWeight:700}}>${totalIncomeUSD.toLocaleString("en-US",{maximumFractionDigits:0})}</span></div>
+            <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total Value: <span style={{color:curLvl.color,fontWeight:700}}>{f(totalSavings)}</span></div>
           </div>
         ) : (
           // ── Broke mode: debt-free progress ──
           <div style={{background:"rgba(255,92,92,0.08)",border:"1px solid rgba(255,92,92,0.35)",borderRadius:20,padding:24,marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
               <span style={{fontSize:36}}>😢</span>
-              <div>
+              <div style={{flex:1}}>
                 <div style={{fontSize:18,fontWeight:800,color:"#ff5c5c"}}>Broke Soldier</div>
-                <div style={{fontSize:12,color:t.subText}}>Earn {f(Math.abs(totalSavings))} more to become debt-free</div>
+                <div style={{fontSize:12,color:t.subText}}>Spending exceeds earnings. Time to turn it around.</div>
+              </div>
+              <div style={{textAlign:"right",flexShrink:0}}>
+                <div style={{fontSize:10,color:t.subText}}>Goal</div>
+                <div style={{fontSize:13,fontWeight:700,color:"#ff5c5c"}}>💸 Debt Free</div>
               </div>
             </div>
             <div style={{background:t.sectionBorder,borderRadius:99,height:10,overflow:"hidden",marginBottom:6}}>
               <div style={{width:Math.min(100,(totalIncome/totalExpenses)*100)+"%",background:"#ff5c5c",height:"100%",borderRadius:99,transition:"width 0.8s"}}/>
             </div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:t.subText}}>
-              <span>{f(totalIncome)} earned</span>
-              <span style={{color:"#ff5c5c",fontWeight:700}}>{((totalIncome/totalExpenses)*100).toFixed(1)}% of debt covered</span>
+              <span>{f(0)}</span>
+              <span style={{color:"#ff5c5c",fontWeight:600}}>{((totalIncome/totalExpenses)*100).toFixed(1)}% → {f(Math.abs(totalSavings))}</span>
             </div>
-            <div style={{fontSize:11,color:t.subText,marginTop:8}}>Total spent: <span style={{color:"#ff5c5c",fontWeight:700}}>{f(totalExpenses)}</span></div>
+            <div style={{fontSize:11,color:t.subText,marginTop:8}}>Earn <span style={{color:"#ff5c5c",fontWeight:700}}>{f(Math.abs(totalSavings))}</span> more to be debt-free</div>
           </div>
         )}
 
