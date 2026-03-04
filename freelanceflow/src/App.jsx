@@ -485,11 +485,7 @@ export default function App() {
   const [invoiceOpen,  setInvoiceOpen]  = useState(false);
   const [installPrompt,setInstallPrompt]= useState(null);
 
-  // ── FIX: Only allow saving AFTER cloud data has been loaded.
-  // Without this guard, the save effect fires on first render with empty
-  // default state (before Firebase responds) and wipes your cloud data —
-  // which is exactly what happened when reopening a stale browser session.
-  const dataLoaded = useRef(false);
+  const dataLoaded = useRef(false); // guard: only save after cloud data is loaded
 
   const isMobile = useIsMobile();
   const t        = THEMES[settings.theme]||THEMES.dark;
@@ -515,16 +511,25 @@ export default function App() {
 
   useEffect(()=>{
     const unsub=onAuthStateChanged(auth,async u=>{
-      setUser(u);
       if(u){
+        // Load cloud data FIRST, then reveal the app — prevents blank flash
         const cloud=await loadFromCloud(u.uid);
         setFinance(cloud.finance);
         setSettings(cloud.settings);
         setProfile(cloud.profile);
         setWorkProfile(cloud.workProfile);
-        dataLoaded.current = true; // ✅ safe to save from this point on
+        dataLoaded.current = true;
+        setUser(u); // set user last so app only renders once data is ready
       } else {
-        dataLoaded.current = false; // reset on sign-out
+        // Reset everything in one place on sign-out — no blank flash
+        setUser(null);
+        setFinance(defaultFinance);
+        setProfile({customName:""});
+        setWorkProfile({...defaultWorkProfile});
+        setSettings({currency:"BDT",theme:"dark"});
+        setTab("dashboard");
+        setPage("main");
+        dataLoaded.current = false;
       }
       setAuthLoading(false);
     });
@@ -532,7 +537,7 @@ export default function App() {
   },[]);
 
   useEffect(()=>{
-    if (!dataLoaded.current) return; // ✅ don't save before cloud data is loaded
+    if (!dataLoaded.current) return; // don't save before cloud data is loaded
     if(!user) return;
     const timer=setTimeout(()=>saveToCloud(user.uid,finance,settings,profile,workProfile),800);
     return()=>clearTimeout(timer);
@@ -545,7 +550,7 @@ export default function App() {
   },[]);
 
   const login  = ()=>signInWithPopup(auth,provider);
-  const logout = ()=>{ dataLoaded.current = false; signOut(auth); setFinance(defaultFinance); setProfile({customName:""}); setWorkProfile({...defaultWorkProfile}); setSettings({currency:"BDT",theme:"dark"}); setTab("dashboard"); setPage("main"); };
+  const logout = ()=>{ dataLoaded.current = false; signOut(auth); };
   const setSetting = (key,val)=>setSettings(s=>({...s,[key]:val}));
 
   const addItem       = (type,item)      => setFinance(d=>({...d,[type]:[item,...d[type]]}));
